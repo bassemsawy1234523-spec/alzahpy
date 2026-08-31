@@ -1,758 +1,798 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#b8860b">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>الأسطول الذهبي - السائق</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#020617">
+<title>الأسطول الذهبي - المالك</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body{font-family:Cairo,Tahoma,Arial,sans-serif;background:#f3f4f6;color:#1f2937}
-  .hiddenx{display:none!important}
-  .card{background:#fff;border-radius:20px;box-shadow:0 5px 18px rgba(0,0,0,.07)}
-  .field{width:100%;border:1px solid #d1d5db;border-radius:14px;padding:12px 14px;background:#fff;outline:none}
-  .field:focus{border-color:#b8860b;box-shadow:0 0 0 3px rgba(184,134,11,.12)}
-  .btn{border:0;border-radius:14px;padding:12px 16px;font-weight:800;cursor:pointer}
-  .btn-primary{background:#b8860b;color:#fff}
-  .btn-dark{background:#111827;color:#fff}
-  .btn-green{background:#15803d;color:#fff}
-  .btn-red{background:#dc2626;color:#fff}
-  .btn-gray{background:#e5e7eb;color:#374151}
-  .btn-blue{background:#2563eb;color:#fff}
-  .btn-whatsapp{background:#16a34a;color:#fff}
-  .small{font-size:12px;color:#6b7280}
-  .label{display:block;font-weight:800;margin-bottom:6px;font-size:13px}
-  .nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;z-index:20}
-  .nav button{flex:1;padding:10px 4px;font-size:12px;color:#6b7280}
-  .nav button.active{color:#b8860b;font-weight:900}
-  .badge{display:inline-block;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:900}
-  .available{background:#dcfce7;color:#166534}.booked{background:#fef3c7;color:#92400e}
-  .closed{background:#e5e7eb;color:#4b5563}.open{background:#dbeafe;color:#1d4ed8}
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
-  .sheet{background:#fff;border-radius:25px 25px 0 0;width:100%;max-height:90vh;overflow:auto;padding:20px}
-  @media(min-width:700px){.sheet{max-width:650px;border-radius:25px;margin-bottom:30px}}
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#000000;color:#f8fafc}
+button,input,select,textarea{font-family:inherit}button{touch-action:manipulation}
+.card{background:#0f172a;border-radius:14px;box-shadow:0 4px 16px #00000088;border:1px solid #1e293b}
+.navbtn{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:12px;color:#cbd5e1;width:100%;font-weight:700;font-size:12px}
+.navbtn.active,.navbtn:hover{background:#334155;color:#ffb703}
+.modal{position:fixed;inset:0;background:#000000cc;z-index:80;display:flex;align-items:flex-start;justify-content:center;padding:8px;overflow:auto}
+.modalbox{width:min(720px,100%);margin-top:15px;background:#0f172a;border-radius:18px;padding:12px;box-shadow:0 15px 50px #000f;border:1px solid #334155;color:#f8fafc}
+.field{width:100%;border:1px solid #334155;border-radius:10px;padding:9px 10px;background:#020617;color:#f8fafc;outline:none;font-size:12px}
+.field:focus{border-color:#f59e0b;box-shadow:0 0 0 2px #f59e0b22}
+.label{font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:4px;display:block}
+.btn{border-radius:10px;padding:8px 12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:12px}
+.btn-primary{background:#d97706;color:#fff}.btn-green{background:#059669;color:#fff}.btn-red{background:#dc2626;color:#fff}.btn-dark{background:#1e293b;color:#fff}.btn-gray{background:#1e293b;color:#cbd5e1}
+.kpi{padding:12px;border-radius:14px;color:white;min-height:90px}
+.small{font-size:11px;color:#94a3b8}.hidden{display:none!important}
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:100;padding:10px 16px;border-radius:12px;color:#fff;box-shadow:0 8px 30px #0008;font-size:12px}
+.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:7px;border-bottom:1px solid #1e293b;text-align:right;white-space:nowrap;font-size:11px}
+.badge{padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800}.open{background:#064e3b;color:#dcfce7}.closed{background:#1e293b;color:#94a3b8}
+.good{color:#34d399}.bad{color:#f87171}
+@media(max-width:1024px){#sidebar{display:none}.mobile-nav{display:flex!important}.content{padding:8px!important;padding-bottom:80px!important}}
 </style>
 </head>
 <body>
 
-<section id="loginScreen" class="min-h-screen flex items-center justify-center p-5">
-  <div class="card w-full max-w-md p-7 text-center">
-    <div class="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-yellow-500 to-yellow-700 flex items-center justify-center text-white text-4xl shadow-lg">🚕</div>
-    <h1 class="text-2xl font-black mt-5">الأسطول الذهبي</h1>
-    <p class="text-gray-500 mt-1">تطبيق السائق</p>
-    <div class="text-right mt-6">
-      <div class="flex justify-between items-center mb-1">
-        <label class="label mb-0">اختر اسم السائق</label>
-        <button id="reloadDriversBtn" type="button" class="text-xs text-amber-700 font-bold underline">🔄 تحديث الأسماء</button>
-      </div>
-      <select id="loginDriverSelect" class="field">
-        <option value="">جاري تحميل السائقين...</option>
-      </select>
-      <label class="label mt-4">كلمة السر</label>
-      <input id="loginPass" class="field" type="password" value="1234" placeholder="كلمة السر">
+<div id="toast" class="toast hidden"></div>
+
+<section id="loginScreen" class="min-h-screen flex items-center justify-center p-3 bg-black">
+  <div class="w-full max-w-sm card p-5 text-center">
+    <div class="w-20 h-20 mx-auto rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-4xl shadow-xl border border-amber-500/30">🚗</div>
+    <h1 class="text-xl font-black mt-3 text-white">الأسطول الذهبي</h1>
+    <p class="text-slate-400 text-xs mt-1">إدارة السيارات والرحلات</p>
+    <div class="mt-5 text-right">
+      <label class="label">كلمة المرور</label>
+      <input id="pin" class="field text-center text-xl tracking-[.3em]" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
     </div>
-    <button id="loginBtn" class="btn btn-primary w-full mt-5">دخول</button>
-    <p class="small mt-4">كلمة السر الافتراضية 1234 ويمكن تغييرها من «حسابي».</p>
+    <button id="loginBtn" class="btn btn-primary w-full mt-3 py-2.5">🔐 دخول</button>
+    <p id="firebaseStatus" class="small mt-3">جاري الاتصال بالسحابة...</p>
   </div>
 </section>
 
-<section id="appScreen" class="hiddenx min-h-screen pb-20">
-  <header class="bg-white sticky top-0 z-10 shadow-sm px-4 py-3 flex items-center justify-between">
-    <div>
-      <div class="font-black">الأسطول الذهبي</div>
-      <div id="driverHeader" class="small"></div>
-    </div>
-    <button id="logoutBtn" class="btn btn-gray text-xs">خروج</button>
-  </header>
-  <main id="view" class="p-4"></main>
-  <nav class="nav flex">
-    <button data-view="available" class="active">📍<br>الرحلات</button>
-    <button data-view="shift">🚦<br>ورديتي</button>
-    <button data-view="account">👤<br>حسابي</button>
-  </nav>
-</section>
-
-<div id="modal" class="hiddenx modal"><div id="modalSheet" class="sheet"></div></div>
-<div id="toast" class="fixed top-4 left-4 right-4 z-[100] hiddenx">
-  <div id="toastText" class="mx-auto max-w-md rounded-2xl px-4 py-3 bg-gray-900 text-white text-center font-bold shadow-xl"></div>
+<div id="app" class="hidden min-h-screen bg-black">
+<header class="bg-slate-950 border-b border-slate-800 text-white h-12 flex items-center justify-between px-3 sticky top-0 z-50">
+  <b class="text-xs">🚗 الأسطول الذهبي</b>
+  <div class="flex items-center gap-2"><span id="syncText" class="text-[11px] text-emerald-400">متصل</span><button id="logoutBtn" class="btn btn-gray text-[11px] py-1 px-2">خروج</button></div>
+</header>
+<div class="flex">
+<aside id="sidebar" class="w-56 bg-slate-950 border-l border-slate-800 min-h-[calc(100vh-48px)] p-2.5 sticky top-12 self-start space-y-1">
+  <button class="navbtn active" data-view="dashboard">📊 التقارير</button>
+  <button class="navbtn" data-view="availableTrips">📍 الرحلات المتاحة</button>
+  <button class="navbtn" data-view="drivers">👨‍✈️ السائقين</button>
+  <button class="navbtn" data-view="cars">🚗 السيارات</button>
+  <button class="navbtn" data-view="customers">👥 العملاء</button>
+  <button class="navbtn" data-view="shifts">🚦 الورديات</button>
+  <button class="navbtn" data-view="treasury">🪙 الخزنة</button>
+  <button class="navbtn" data-view="debts">📝 الديون والالتزامات</button>
+  <button class="navbtn" data-view="archive">🗄️ الأرشيف</button>
+</aside>
+<main class="content flex-1 p-2.5 min-w-0"><div id="view"></div></main>
 </div>
+<div class="mobile-nav hidden fixed bottom-0 inset-x-0 bg-slate-950 border-t border-slate-800 z-50 p-1 gap-1 overflow-x-auto justify-around">
+  <button class="navbtn text-[10px] flex-col py-1 px-1" data-view="dashboard">📊<span>التقارير</span></button>
+  <button class="navbtn text-[10px] flex-col py-1 px-1" data-view="availableTrips">📍<span>الرحلات</span></button>
+  <button class="navbtn text-[10px] flex-col py-1 px-1" data-view="drivers">👨‍✈️<span>السائقين</span></button>
+  <button class="navbtn text-[10px] flex-col py-1 px-1" data-view="cars">🚗<span>السيارات</span></button>
+  <button class="navbtn text-[10px] flex-col py-1 px-1" data-view="shifts">🚦<span>الورديات</span></button>
+  <button class="navbtn text-[10px] flex-col py-1 px-1" data-view="treasury">🪙<span>الخزنة</span></button>
+  <button class="navbtn text-[10px] flex-col py-1 px-1" data-view="debts">📝<span>الديون</span></button>
+  <button class="navbtn text-[10px] flex-col py-1 px-1" data-view="archive">🗄️<span>الأرشيف</span></button>
+</div>
+</div>
+<div id="modal" class="hidden modal"><div id="modalBox" class="modalbox"></div></div>
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {getDatabase, ref, get, set, update, push, onValue, runTransaction} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
-import {getAuth, signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+import {getDatabase,ref,onValue,push,set,update,remove} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-database.js";
+import {getStorage,ref as sRef,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-storage.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC2kISqD9SEhnNujTK9nrQ0XuvLTDyYk",
-  authDomain: "beesw-al-sawy.firebaseapp.com",
-  databaseURL: "https://fleetsmart-2513b-default-rtdb.firebaseio.com",
-  projectId: "beesw-al-sawy",
-  storageBucket: "beesw-al-sawy.appspot.com",
-  messagingSenderId: "313509851153",
-  appId: "1:313509851153:web:57cf94a12f32a6f57901b0"
+const firebaseConfig={
+  apiKey:"AIzaSyAuIdAJksajVw-NAWUvsgNOhoITUiL1wTE",
+  authDomain:"beesw-al-sawy.firebaseapp.com",
+  databaseURL:"https://fleetsmart-2513b-default-rtdb.firebaseio.com",
+  projectId:"beesw-al-sawy",
+  storageBucket:"beesw-al-sawy.firebasestorage.app",
+  messagingSenderId:"313509851153",
+  appId:"1:313509851153:android:ef2a5e68e3e630017901b0"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
+let app,db,storage;
+let cloudReady=false;
 
-const state = {
-  driver: null,
-  view: "available",
-  data: {drivers:{}, cars:{}, availableTrips:{}, shifts:{}, trips:{}, expenses:{}, settings:{}},
-  unsub: []
-};
-
-const $ = id => document.getElementById(id);
-const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const num = id => Number($(id)?.value || 0);
-const val = id => $(id)?.value?.trim() || "";
-const money = n => new Intl.NumberFormat("ar-EG",{minimumFractionDigits:0,maximumFractionDigits:2}).format(Number(n||0))+" ج";
-const now = () => Date.now();
-const dateTime = t => t ? new Intl.DateTimeFormat("ar-EG",{dateStyle:"medium",timeStyle:"short"}).format(new Date(t)) : "—";
-
-function toast(msg, bad=false){
-  $("toastText").textContent = msg;
-  $("toastText").style.background = bad ? "#b91c1c" : "#111827";
-  $("toast").classList.remove("hiddenx");
-  setTimeout(() => $("toast").classList.add("hiddenx"), 2500);
+function setStatus(t,type){
+  const el=document.getElementById("firebaseStatus");
+  if(el){el.textContent=t;el.className="small "+(type==="ok"?"text-emerald-400":"text-red-400")}
+}
+function toast(t,bad=false){
+  const x=document.getElementById("toast");
+  x.textContent=t;x.className="toast "+(bad?"bg-red-600":"bg-emerald-600");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer=setTimeout(()=>x.classList.add("hidden"),2600);
 }
 
-function modal(x){
-  $("modalSheet").innerHTML = x;
-  $("modal").classList.remove("hiddenx");
+try{
+  app=initializeApp(firebaseConfig);
+  db=getDatabase(app);
+  storage=getStorage(app);
+  cloudReady=true;
+  setStatus("تم تجهيز الاتصال بالسحابة","ok");
+}catch(e){
+  console.error(e);
+  setStatus("خطأ إعداد Firebase: "+e.message,"bad");
 }
 
-let fuelCameraStream = null;
-let fuelPhotoData = "";
+const paths=["drivers","cars","customers","shifts","trips","expenses","treasury","rentPayments","archives","availableTrips","debts","settings","advances"];
+const state={view:"dashboard",data:{}};
+paths.forEach(p=>state.data[p]={});
 
-function stopFuelCamera(){
-  if(fuelCameraStream){
-    fuelCameraStream.getTracks().forEach(t => t.stop());
-    fuelCameraStream = null;
-  }
-}
+const money=n=>(Number(n)||0).toLocaleString("ar-EG",{minimumFractionDigits:2,maximumFractionDigits:2})+" ج.م";
+const dateTime=t=>new Date(t||Date.now()).toLocaleString("ar-EG");
+const vals=o=>Object.entries(o||{}).map(([id,v])=>({...v,id}));
+const val=id=>document.getElementById(id)?.value?.trim()||"";
+const num=id=>Number(document.getElementById(id)?.value||0);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 
-function closeModal(){
-  stopFuelCamera();
-  $("modal").classList.add("hiddenx");
-  $("modalSheet").innerHTML = "";
-}
-window.closeModal = closeModal;
+function openModal(html){document.getElementById("modalBox").innerHTML=html;document.getElementById("modal").classList.remove("hidden")}
+function closeModal(){document.getElementById("modal").classList.add("hidden")}
+window.closeModal=closeModal;
 
-async function sha256(text){
-  const data = new TextEncoder().encode(text);
-  return crypto.subtle.digest("SHA-256", data).then(buf => [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2,"0")).join(""));
-}
+function checkAlerts(){
+  const today=new Date();
+  const currentMonth=today.getMonth();
+  const currentYear=today.getFullYear();
+  let alerts=[];
 
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-}
-
-async function loadDriversList(){
-  const select = $("loginDriverSelect");
-  if(!select) return;
-  select.innerHTML = '<option value="">جاري تحميل السائقين...</option>';
-  try{
-    const snap = await get(ref(db, "drivers"));
-    if(!snap.exists()){
-      select.innerHTML = '<option value="">لا توجد بيانات سائقين في القاعدة</option>';
-      return;
-    }
-    
-    const rawData = snap.val();
-    state.data.drivers = {};
-    let html = '<option value="">اختر اسم السائق</option>';
-    let count = 0;
-
-    const processItem = (key, item) => {
-      if(item && typeof item === "object"){
-        const driverId = item.id || key;
-        const driverName = item.name || item.fullName || item.driverName;
-        if(driverName){
-          state.data.drivers[driverId] = { ...item, id: driverId, name: driverName };
-          html += `<option value="${esc(driverId)}">${esc(driverName)}</option>`;
-          count++;
-        } else {
-          Object.keys(item).forEach(subKey => {
-            const subItem = item[subKey];
-            if(subItem && typeof subItem === "object"){
-              const subId = subItem.id || subKey;
-              const subName = subItem.name || subItem.fullName || subItem.driverName;
-              if(subName){
-                state.data.drivers[subId] = { ...subItem, id: subId, name: subName };
-                html += `<option value="${esc(subId)}">${esc(subName)}</option>`;
-                count++;
-              }
-            }
-          });
+  vals(state.data.cars).forEach(c=>{
+    if(c.status==="إيجار"&&c.rentDate){
+      const rentDay=parseInt(c.rentDate);
+      if(!isNaN(rentDay)){
+        const dueDate=new Date(currentYear,currentMonth,rentDay);
+        const diffDays=Math.ceil((dueDate-today)/(1000*60*60*24));
+        if(diffDays>=0&&diffDays<=3){
+          alerts.push(`🚗 ميعاد إيجار السيارة (${c.brand||""} ${c.model||""}) مستحق خلال ${diffDays===0?"اليوم!":diffDays+" أيام"}`);
         }
       }
-    };
-
-    if(Array.isArray(rawData)){
-      rawData.forEach((item, index) => processItem(index, item));
-    } else {
-      Object.keys(rawData).forEach(key => processItem(key, rawData[key]));
     }
+  });
 
-    if(count === 0){
-      select.innerHTML = '<option value="">لا توجد أسماء سائقين مطابقة</option>';
-    } else {
-      select.innerHTML = html;
+  vals(state.data.debts).forEach(d=>{
+    if(d.dueDate){
+      const dueDay=parseInt(d.dueDate);
+      if(!isNaN(dueDay)){
+        const dueDate=new Date(currentYear,currentMonth,dueDay);
+        const diffDays=Math.ceil((dueDate-today)/(1000*60*60*24));
+        if(diffDays>=0&&diffDays<=3){
+          alerts.push(`📝 ميعاد سداد الالتزام (${d.name}) مستحق خلال ${diffDays===0?"اليوم!":diffDays+" أيام"}`);
+        }
+      }
     }
-  }catch(e){
-    console.error(e);
-    select.innerHTML = '<option value="">خطأ في الاتصال بقاعدة البيانات</option>';
-    toast("تعذر تحميل السائقين", true);
-  }
-}
+  });
 
-async function login(){
-  const driverId = val("loginDriverSelect"), pass = val("loginPass");
-  if(!driverId || !pass) return toast("اختر اسم السائق واكتب كلمة السر", true);
-  const found = state.data.drivers[driverId];
-  if(!found) return toast("السائق غير موجود، اختر من القائمة", true);
-  const hash = await sha256(pass);
-  if(found.passwordHash && found.passwordHash !== hash) return toast("كلمة السر غير صحيحة", true);
-  if(!found.passwordHash && found.password && found.password !== pass) return toast("كلمة السر غير صحيحة", true);
-  state.driver = {...found, id: driverId};
-  localStorage.setItem("goldenFleetDriver", driverId);
-  startListeners();
-  showApp();
-}
-
-async function restoreLogin(){
-  await loadDriversList();
-  const id = localStorage.getItem("goldenFleetDriver");
-  if(!id) return;
-  const s = await get(ref(db, "drivers/" + id));
-  if(s.exists()){
-    const valData = s.val();
-    state.driver = { ...(typeof valData === "object" ? valData : {}), id, name: valData.name || valData.fullName || id };
-    startListeners();
-    showApp();
-  }
-}
-
-function startListeners(){
-  state.unsub.forEach(u => u && u());
-  state.unsub = [];
-  const paths = ["cars", "availableTrips", "shifts", "trips", "expenses"];
-  for(const p of paths){
-    const u = onValue(ref(db, p), snap => {
-      state.data[p] = snap.val() || {};
-      render();
-    });
-    state.unsub.push(u);
+  if(alerts.length>0&&!window.__alertShown){
+    window.__alertShown=true;
+    toast(alerts[0],true);
   }
 }
 
 function showApp(){
-  $("loginScreen").classList.add("hiddenx");
-  $("appScreen").classList.remove("hiddenx");
-  $("driverHeader").textContent = state.driver?.name || "السائق";
+  document.getElementById("loginScreen").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
   render();
+  checkAlerts();
+}
+function login(){
+  if(val("pin")!=="6352")return toast("كلمة المرور غير صحيحة",true);
+  showApp();
+}
+document.getElementById("loginBtn").onclick=login;
+document.getElementById("pin").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
+document.getElementById("logoutBtn").onclick=()=>{
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("loginScreen").classList.remove("hidden");
+  document.getElementById("pin").value="";
+};
+
+document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{
+  state.view=b.dataset.view;
+  document.querySelectorAll(".navbtn").forEach(x=>x.classList.toggle("active",x.dataset.view===state.view));
+  render();
+});
+
+if(cloudReady){
+  onValue(ref(db),snap=>{
+    const d=snap.val()||{};
+    paths.forEach(p=>state.data[p]=d[p]||{});
+    document.getElementById("syncText").textContent="متصل";
+    document.getElementById("syncText").className="text-[11px] text-emerald-400";
+    setStatus("متصل بالسحابة","ok");
+    if(!document.getElementById("app").classList.contains("hidden")){
+      render();
+      checkAlerts();
+    }
+  },err=>{
+    console.error(err);
+    document.getElementById("syncText").textContent="خطأ السحابة";
+    document.getElementById("syncText").className="text-[11px] text-red-400";
+    setStatus("تعذر قراءة قاعدة البيانات: "+err.message,"bad");
+  });
 }
 
-function activeShift(){
-  return Object.values(state.data.shifts || {}).find(s =>
-    s.driverId === state.driver?.id &&
-    (s.status === "مفتوحة" || s.status === "مفتوحه" || s.status === "open") &&
-    !s.endedAt
-  );
+function layout(title,sub=""){return `<div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div><h2 class="text-lg font-black text-white">${title}</h2><p class="small">${sub}</p></div></div>`}
+
+function shiftCalc(s){
+  const trips=vals(state.data.trips).filter(t=>t.shiftId===s.id);
+  const ex=vals(state.data.expenses).filter(e=>e.shiftId===s.id);
+  const revenue=trips.reduce((a,t)=>a+(Number(t.amount)||0),0);
+  const expenses=ex.filter(e=>e.type!=="مصروف شخصي للسائق").reduce((a,e)=>a+(Number(e.amount)||0),0);
+  const personal=ex.filter(e=>e.type==="مصروف شخصي للسائق").reduce((a,e)=>a+(Number(e.amount)||0),0);
+  const pct=revenue*(Number(s.driverPercent)||0)/100;
+  return {trips,ex,revenue,expenses,personal,pct,net:revenue-expenses-pct};
 }
 
-function render(){
-  if(!state.driver) return;
-  $("driverHeader").textContent = state.driver.name || "السائق";
-  document.querySelectorAll(".nav button").forEach(b => b.classList.toggle("active", b.dataset.view === state.view));
-  if(state.view === "available") renderAvailable();
-  if(state.view === "shift") renderShift();
-  if(state.view === "account") renderAccount();
+function driverBalance(id){
+  const d=state.data.drivers[id]||{};
+  const opening=Number(d.openingBalance??d.initBalance)||0;
+  let earned=0,paid=0,adv=0,advPaid=0;
+  vals(state.data.shifts).filter(s=>s.driverId===id).forEach(s=>{
+    const c=shiftCalc(s);
+    earned+=Math.max(0,Number(s.driverDue??(c.revenue-c.pct-c.personal))||0);
+    paid+=Number(s.paidNow)||0;
+  });
+  vals(state.data.advances).filter(a=>a.partyType==="driver"&&a.partyId===id).forEach(a=>{
+    adv+=Number(a.amount)||0;advPaid+=Number(a.paid)||0;
+  });
+  return {opening,earned,paid,advOutstanding:adv-advPaid,balance:opening+earned-paid-adv+advPaid};
 }
 
-function renderAvailable(){
-  const list = Object.values(state.data.availableTrips || {}).filter(t => t.status === "متاحة").sort((a,b) => (a.tripAt||0)-(b.tripAt||0));
-  $("view").innerHTML = `
-    <div class="mb-4 flex items-center justify-between">
-      <div>
-        <h2 class="text-2xl font-black">الرحلات المتاحة</h2>
-        <p class="small mt-1">استلم الرحلة المناسبة لك. بعد الاستلام تصبح محجوزة لك فورًا.</p>
+function carBalance(id){
+  const c=state.data.cars[id]||{};
+  const opening=Number(c.openingBalance??c.initBalance)||0;
+  let due=0,paid=0,adv=0,advPaid=0;
+  vals(state.data.rentPayments).filter(x=>x.carId===id).forEach(x=>{
+    due+=Number(x.dueAmount)||0;paid+=Number(x.amount)||0;
+  });
+  vals(state.data.advances).filter(a=>a.partyType==="car"&&a.partyId===id).forEach(a=>{
+    adv+=Number(a.amount)||0;advPaid+=Number(a.paid)||0;
+  });
+  return {opening,rentDue:due,rentPaid:paid,advOutstanding:adv-advPaid,balance:opening+due-paid-adv+advPaid};
+}
+
+async function treasuryRecord(amount,description,type){
+  if(!cloudReady)return;
+  const r=push(ref(db,"treasury"));
+  await set(r,{id:r.key,amount:Number(amount)||0,description,type,createdAt:Date.now()});
+}
+
+function dashboard(){
+  const ss=vals(state.data.shifts);
+  const rev=ss.reduce((a,s)=>a+shiftCalc(s).revenue,0);
+  const ex=ss.reduce((a,s)=>a+shiftCalc(s).expenses,0);
+  const pct=ss.reduce((a,s)=>a+shiftCalc(s).pct,0);
+  return layout("التقارير","بيانات مرتبطة مباشرة بالسحابة")+
+  `<div class="grid grid-cols-2 gap-2">
+    <div class="kpi bg-slate-900 border border-slate-800">الإيرادات<br><b class="text-lg sm:text-xl mt-1 block">${money(rev)}</b></div>
+    <div class="kpi bg-red-950/60 border border-red-900/40">المصاريف<br><b class="text-lg sm:text-xl mt-1 block">${money(ex)}</b></div>
+    <div class="kpi bg-amber-950/60 border border-amber-900/40">نسب السائقين<br><b class="text-lg sm:text-xl mt-1 block">${money(pct)}</b></div>
+    <div class="kpi bg-emerald-950/60 border border-emerald-900/40">الصافي<br><b class="text-lg sm:text-xl mt-1 block">${money(rev-ex-pct)}</b></div>
+  </div>`;
+}
+
+function drivers(){
+  return layout("السائقين","الرصيد الافتتاحي والسداد والسلف والتفاصيل")+
+  `<button class="btn btn-primary mb-2 text-xs" data-action="newDriver">+ إضافة سائق</button>
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-2">
+  ${vals(state.data.drivers).map(d=>{
+    const b=driverBalance(d.id);
+    return `<div class="card p-2.5">
+      <b class="text-sm text-white">👨‍✈️ ${esc(d.name)}</b>
+      <div class="small mt-0.5">${esc(d.phone||"")}</div>
+      <div class="grid grid-cols-2 gap-2 mt-2 text-[11px]">
+        <span>الرصيد الافتتاحي<br><b class="text-white">${money(b.opening)}</b></span>
+        <span>المستحق<br><b class="text-white">${money(Math.max(0,b.balance))}</b></span>
+        <span>السلف المتبقية<br><b class="text-white">${money(b.advOutstanding)}</b></span>
+        <span>النسبة<br><b class="text-white">${Number(d.percent||0)}%</b></span>
       </div>
-      <button id="addNewTripBtn" class="btn btn-primary text-xs">+ رحلة جديدة</button>
-    </div>
-    ${!activeShift() ? `<div class="card p-4 mb-4 border border-amber-200 bg-amber-50">
-      <b>⚠️ لا توجد وردية مفتوحة</b><p class="small mt-1">افتح ورديتك أولًا من تبويب «ورديتي» حتى تستطيع استلام رحلة.</p>
-      <button class="btn btn-primary mt-3" data-go="shift">فتح وردية</button>
-    </div>` : ""}
-    <div class="grid gap-4">${list.map(t => tripCard(t)).join("") || `<div class="card p-6 text-center text-gray-500">لا توجد رحلات متاحة الآن.</div>`}</div>`;
-  
-  $("addNewTripBtn").onclick = addNewTripForm;
-  $("view").querySelectorAll("[data-go]").forEach(b => b.onclick = () => { state.view = b.dataset.go; render(); });
-  $("view").querySelectorAll("[data-trip]").forEach(b => b.onclick = () => tripDetails(b.dataset.trip));
-  $("view").querySelectorAll("[data-nav]").forEach(b => b.onclick = () => { const t = state.data.availableTrips[b.dataset.nav]; if(t) openNavigation(t); });
-  $("view").querySelectorAll("[data-call]").forEach(b => b.onclick = () => { const phone = b.dataset.call; if(phone) location.href=`tel:${phone}`; else toast("رقم الهاتف غير متوفر", true); });
-  $("view").querySelectorAll("[data-whatsapp]").forEach(b => b.onclick = () => { const phone = b.dataset.whatsapp; if(phone) window.open(`https://wa.me/${phone.replace(/[^0-9]/g,"")}`,"_blank"); else toast("رقم الواتساب غير متوفر", true); });
+      <div class="flex flex-wrap gap-1 mt-2.5">
+        <button class="btn btn-green text-[10px] py-1 px-2" data-action="driverPay" data-id="${d.id}">💵 سداد</button>
+        <button class="btn btn-primary text-[10px] py-1 px-2" data-action="driverAdvance" data-id="${d.id}">＋ سلفة</button>
+        <button class="btn btn-dark text-[10px] py-1 px-2 border border-slate-700" data-action="driverDetails" data-id="${d.id}">📋 تفاصيل</button>
+        <button class="btn btn-gray text-[10px] py-1 px-2" data-action="editDriver" data-id="${d.id}">تعديل</button>
+      </div>
+    </div>`;
+  }).join("")||"<p class='small'>لا يوجد سائقون.</p>"}</div>`;
 }
 
-function addNewTripForm(){
-  modal(`<h3 class="text-xl font-black">➕ إضافة رحلة جديدة</h3>
-    <label class="label mt-4">اسم العميل</label><input id="newCustName" class="field" placeholder="اسم العميل">
-    <label class="label mt-3">رقم الهاتف</label><input id="newCustPhone" class="field" placeholder="رقم الهاتف">
-    <label class="label mt-3">مكان الإقلاع</label><input id="newPickup" class="field" placeholder="عنوان الإقلاع">
-    <div class="grid grid-cols-2 gap-2 mt-2">
-      <input id="newPickupLat" class="field text-xs" placeholder="خط العرض (Latitude) اختيار اختياري">
-      <input id="newPickupLng" class="field text-xs" placeholder="خط الطول (Longitude) اختيار اختياري">
-    </div>
-    <label class="label mt-3">مكان النزول</label><input id="newDrop" class="field" placeholder="عنوان الوصول">
-    <label class="label mt-3">قيمة الرحلة (ج)</label><input id="newAmount" class="field" type="number" step="0.01" placeholder="0">
-    <button id="saveNewTrip" class="btn btn-primary w-full mt-5">حفظ وإضافة للرحلات المتاحة</button>
-    <button class="btn btn-gray w-full mt-2" onclick="closeModal()">إلغاء</button>`);
-
-  $("saveNewTrip").onclick = async () => {
-    const customerName = val("newCustName"), customerPhone = val("newCustPhone"), pickupAddress = val("newPickup"), dropoffAddress = val("newDrop"), amount = num("newAmount");
-    const pickupLat = num("newPickupLat") || null, pickupLng = num("newPickupLng") || null;
-    if(!customerName || !pickupAddress || !dropoffAddress || amount <= 0) return toast("املأ الحانات الأساسية وقيمة الرحلة بشكل صحيح", true);
-    
-    const id = push(ref(db, "availableTrips")).key;
-    const newTrip = {
-      id, customerName, customerPhone, pickupAddress, dropoffAddress, amount,
-      pickupLat, pickupLng,
-      status: "متاحة", tripAt: now(), createdAt: now()
-    };
-    await set(ref(db, "availableTrips/" + id), newTrip);
-    closeModal();
-    toast("تم إضافة الرحلة بنجاح لقائمة الرحلات المتاحة");
+function driverForm(id){
+  const d=id?state.data.drivers[id]:{};
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">بيانات السائق</h3>
+  <div class="grid md:grid-cols-2 gap-2">
+    <div><label class="label">الاسم</label><input id="dName" class="field" value="${esc(d.name||"")}"></div>
+    <div><label class="label">الهاتف</label><input id="dPhone" class="field" value="${esc(d.phone||"")}"></div>
+    <div><label class="label">النسبة %</label><input id="dPct" class="field" type="number" value="${d.percent??30}"></div>
+    <div><label class="label">الرصيد الافتتاحي</label><input id="dOpen" class="field" type="number" step="0.01" value="${d.openingBalance??d.initBalance??0}"></div>
+  </div>
+  <div class="flex gap-2 mt-3"><button id="saveDriver" class="btn btn-primary text-xs">حفظ</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+  document.getElementById("saveDriver").onclick=async()=>{
+    const x={name:val("dName"),phone:val("dPhone"),percent:num("dPct"),openingBalance:num("dOpen"),updatedAt:Date.now()};
+    if(!x.name)return toast("أدخل اسم السائق",true);
+    try{
+      if(id)await update(ref(db,"drivers/"+id),x);
+      else{const r=push(ref(db,"drivers"));await set(r,{...x,id:r.key,createdAt:Date.now()})}
+      closeModal();toast("تم حفظ السائق");render();
+    }catch(e){toast("تعذر الحفظ: "+e.message,true)}
   };
 }
 
-function tripCard(t){
-  const phone = t.customerPhone || "";
-  return `<div class="card p-4">
-    <div class="flex items-start justify-between gap-3">
-      <div><div class="font-black text-lg">${esc(t.customerName||"عميل")}</div><div class="small">${dateTime(t.tripAt)}</div></div>
-      <div class="text-left"><div class="font-black text-lg">${money(t.amount)}</div><span class="badge available">متاحة</span></div>
-    </div>
-    <div class="mt-4 space-y-2 text-sm">
-      <div>📍 <b>الإقلاع:</b> ${esc(t.pickupAddress||"")}</div>
-      <div>🏁 <b>النزول:</b> ${esc(t.dropoffAddress||"")}</div>
-    </div>
-    <div class="grid grid-cols-2 gap-2 mt-4">
-      <button class="btn btn-blue" data-trip="${esc(t.id)}">تفاصيل والموقع</button>
-      <button class="btn btn-green" data-nav="${esc(t.id)}">📍 ملاحة</button>
-    </div>
-    ${phone ? `<div class="grid grid-cols-2 gap-2 mt-2">
-      <button class="btn btn-dark text-xs" data-call="${esc(phone)}">📞 اتصال بالعميل</button>
-      <button class="btn btn-whatsapp text-xs" data-whatsapp="${esc(phone)}">💬 واتساب</button>
-    </div>`:""}
-  </div>`;
-}
+function driverPay(id){payForm("سداد السائق","driver",id,Math.max(0,driverBalance(id).balance))}
+function driverAdvance(id){advanceForm("driver",id)}
 
-function openNavigation(t){
-  navigator.geolocation.getCurrentPosition(pos => {
-    const origin = pos.coords.latitude + "," + pos.coords.longitude;
-    const dest = (t.pickupLat != null && t.pickupLng != null) ? t.pickupLat + "," + t.pickupLng : encodeURIComponent(t.pickupAddress || "");
-    location.href = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${dest}&travelmode=driving`;
-  }, () => {
-    location.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(t.pickupAddress||"")}&travelmode=driving`;
-  }, {enableHighAccuracy: true, timeout: 10000});
-}
-
-function tripDetails(id){
-  const t = state.data.availableTrips[id]; if(!t) return;
-  const shift = activeShift();
-  const phone = t.customerPhone || "";
-  
-  modal(`<h3 class="text-2xl font-black">تفاصيل الرحلة والمسافة</h3>
-    <div class="mt-4 grid gap-3">
-      <div class="card p-4 bg-amber-50 border border-amber-200">
-        <span class="small font-bold text-amber-800">⏱️ المسافة والوقت الفعلي لموقع الإقلاع</span>
-        <div id="distanceTimeBox" class="font-black text-lg mt-1 text-amber-950">جاري حساب موقعك الحالي...</div>
+function cars(){
+  return layout("السيارات","إدارة السيارات والمالكين")+
+  `<button class="btn btn-primary mb-2 text-xs" data-action="newCar">+ إضافة سيارة</button>
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-2">
+  ${vals(state.data.cars).map(c=>{
+    const b=carBalance(c.id);
+    return `<div class="card p-2.5">
+      <div class="text-sm font-black text-white">🚗 ${esc(c.brand||c.name||"سيارة")} ${esc(c.model||"")} ${esc(c.year||"")}</div>
+      <div class="small mt-0.5">الحالة: ${esc(c.status||"ملك")} ${c.status==="إيجار"?`<br>المالك: ${esc(c.ownerName||"")} (${esc(c.ownerPhone||"")})<br>الإيجار: ${money(c.rentMonthly)} - يوم السداد: ${esc(c.rentDate||"")}`:""}</div>
+      <div class="grid grid-cols-2 gap-2 mt-2 text-[11px]">
+        <span>الرصيد الافتتاحي<br><b class="text-white">${money(b.opening)}</b></span>
+        <span>${c.status==="إيجار"?"الإيجار المستحق":"مستحقات أخرى"}<br><b class="text-white">${money(b.rentDue)}</b></span>
+        <span>المدفوع<br><b class="text-white">${money(b.rentPaid)}</b></span>
+        <span>السلف المتبقية<br><b class="text-white">${money(b.advOutstanding)}</b></span>
       </div>
-      <div class="card p-4"><span class="small">التاريخ والوقت</span><div class="font-black mt-1">${dateTime(t.tripAt)}</div></div>
-      <div class="card p-4"><span class="small">قيمة الرحلة</span><div class="font-black text-xl mt-1">${money(t.amount)}</div></div>
-      <div class="card p-4"><span class="small">العميل</span><div class="font-black mt-1">${esc(t.customerName||"")}</div><div class="small mt-1">${esc(phone)}</div>
-        ${phone ? `<div class="grid grid-cols-2 gap-2 mt-3">
-          <button id="modalCall" class="btn btn-dark text-xs">📞 اتصال</button>
-          <button id="modalWa" class="btn btn-whatsapp text-xs">💬 واتساب</button>
-        </div>` : ""}
+      <div class="mt-2 p-1.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px]">الرصيد الحالي:
+        <b class="${b.balance>=0?"good":"bad"}">${money(Math.abs(b.balance))} ${b.balance>=0?"له":"عليه"}</b>
       </div>
-      <div class="card p-4"><span class="small">موقع الإقلاع</span><div class="mt-1">${esc(t.pickupAddress||"")}</div>
-        <button id="navPickup" class="btn btn-blue mt-3 w-full">📍 فتح الإقلاع في Google Maps</button></div>
-      <div class="card p-4"><span class="small">موقع النزول</span><div class="mt-1">${esc(t.dropoffAddress||"")}</div>
-        <button id="navDrop" class="btn btn-gray mt-3 w-full">🏁 فتح النزول في Google Maps</button></div>
-    </div>
-    <div class="grid grid-cols-2 gap-2 mt-5">
-      <button id="claimBtn" class="btn btn-green" ${shift ? "" : "disabled"}>استلام الرحلة</button>
-      <button id="closeBtn" class="btn btn-gray">إغلاق</button>
-    </div>
-    ${shift ? "" : "<p class='small text-red-600 mt-2'>يجب فتح وردية أولًا.</p>"}`);
-  
-  navigator.geolocation.getCurrentPosition(pos => {
-    const driverLat = pos.coords.latitude;
-    const driverLng = pos.coords.longitude;
-    
-    if(t.pickupLat != null && t.pickupLng != null) {
-      const distKm = calculateDistance(driverLat, driverLng, t.pickupLat, t.pickupLng);
-      const estMinutes = Math.round((distKm / 30) * 60);
-      const roadDist = (distKm * 1.3).toFixed(1);
-      const roadMinutes = Math.max(1, Math.round(estMinutes * 1.3));
-      
-      $("distanceTimeBox").innerHTML = `مسافة تقريبية: <b>${roadDist} كم</b> | وقت قيادة تقريبي: <b>حوالي ${roadMinutes} دقيقة</b>`;
-    } else {
-      $("distanceTimeBox").innerHTML = `تم تحديد موقعك. يفضل توفير إحداثيات الإقلاع لمتابعة المسافة الدقيقة بدقة.`;
-    }
-  }, () => {
-    $("distanceTimeBox").innerHTML = `تعذر الحصول على موقع GPS الخاص بك حالياً. تأكد من إذن الموقع (Location Permission).`;
-  }, {enableHighAccuracy: true, timeout: 8000});
-
-  $("closeBtn").onclick = closeModal;
-  if($("modalCall")) $("modalCall").onclick = () => location.href = `tel:${phone}`;
-  if($("modalWa")) $("modalWa").onclick = () => window.open(`https://wa.me/${phone.replace(/[^0-9]/g,"")}`,"_blank");
-  $("navPickup").onclick = () => openNavigation(t);
-  $("navDrop").onclick = () => navigator.geolocation.getCurrentPosition(p => {
-    location.href = `https://www.google.com/maps/dir/?api=1&origin=${p.coords.latitude},${p.coords.longitude}&destination=${encodeURIComponent(t.dropoffAddress||"")}&travelmode=driving`;
-  }, () => location.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.dropoffAddress||"")}`);
-  if(shift) $("claimBtn").onclick = () => claimTrip(t.id);
+      <div class="flex flex-wrap gap-1 mt-2.5">
+        <button class="btn btn-green text-[10px] py-1 px-2" data-action="carRentPay" data-id="${c.id}">💵 سداد</button>
+        <button class="btn btn-primary text-[10px] py-1 px-2" data-action="carAdvance" data-id="${c.id}">＋ سلفة</button>
+        <button class="btn btn-dark text-[10px] py-1 px-2 border border-slate-700" data-action="carDetails" data-id="${c.id}">📋 تفاصيل</button>
+        <button class="btn btn-gray text-[10px] py-1 px-2" data-action="editCar" data-id="${c.id}">تعديل</button>
+      </div>
+    </div>`;
+  }).join("")||"<p class='small'>لا توجد سيارات.</p>"}</div>`;
 }
 
-async function claimTrip(id){
-  const shift = activeShift();
-  if(!shift) return toast("افتح وردية أولًا", true);
-  const tripRef = ref(db, "availableTrips/" + id);
-  const result = await runTransaction(tripRef, current => {
-    if(!current || current.status !== "متاحة") return;
-    return {...current, status: "محجوزة", driverId: state.driver.id, driverName: state.driver.name, shiftId: shift.id, shiftNo: shift.shiftNo || shift.id, bookedAt: now(), updatedAt: now()};
-  });
-  if(!result.committed) return toast("الرحلة تم استلامها بواسطة سائق آخر", true);
-  const trip = result.snapshot.val();
-  const tripId = trip.id || id;
-  await set(ref(db, "trips/" + tripId), {
-    ...trip, id: tripId, status: "محجوزة", driverId: state.driver.id, driverName: state.driver.name,
-    shiftId: shift.id, createdAt: trip.createdAt || now(), bookedAt: trip.bookedAt || now()
-  });
-  await update(ref(db, "shifts/" + shift.id + "/tripIds"), {[tripId]: true});
-  closeModal(); toast("تم استلام الرحلة وربطها بالوردية"); state.view = "shift"; render();
-}
-
-function renderShift(){
-  const s = activeShift();
-  if(!s){
-    $("view").innerHTML = `<div class="mb-4"><h2 class="text-2xl font-black">ورديتي</h2><p class="small mt-1">افتح وردية واحدة ثم استلم رحلاتك منها.</p></div>
-    <div class="card p-6 text-center"><div class="text-5xl">🚦</div><h3 class="font-black text-xl mt-3">لا توجد وردية مفتوحة</h3>
-    <button id="openShiftBtn" class="btn btn-primary mt-5">+ فتح وردية جديدة</button></div>`;
-    $("openShiftBtn").onclick = shiftForm; return;
-  }
-  const trips = Object.values(state.data.trips || {}).filter(t => (t.shiftId === s.id || t.driverId === state.driver.id && t.shiftId === s.id) && t.status !== "ملغية");
-  const expenses = Object.values(state.data.expenses || {}).filter(e => e.shiftId === s.id);
-  const revenue = trips.reduce((a,t) => a + Number(t.amount || 0), 0);
-  const exp = expenses.reduce((a,e) => a + Number(e.amount || 0), 0);
-  const pct = Number(state.driver.percent ?? state.driver.nisba ?? state.driver.percentage ?? 0);
-  const driverPct = revenue * pct / 100;
-  const net = revenue - exp - driverPct;
-
-  $("view").innerHTML = `<div class="mb-4"><h2 class="text-2xl font-black">ورديتي</h2><p class="small mt-1">وردية رقم ${esc(s.shiftNo||s.id)}</p></div>
-  <div class="card p-4 mb-4"><div class="flex justify-between"><div><b>${esc(s.carName||s.carId||"السيارة")}</b><div class="small mt-1">بدأت: ${dateTime(s.startedAt)}</div></div><span class="badge open">مفتوحة</span></div>
-  <div class="grid grid-cols-2 gap-3 mt-4">
-    <div><span class="small">الإيرادات</span><div class="font-black text-lg">${money(revenue)}</div></div>
-    <div><span class="small">المصاريف</span><div class="font-black text-lg">${money(exp)}</div></div>
-    <div><span class="small">نسبة السائق</span><div class="font-black text-lg">${money(driverPct)}</div></div>
-    <div><span class="small">الصافي</span><div class="font-black text-lg">${money(net)}</div></div>
-  </div></div>
-  <div class="grid grid-cols-2 gap-2 mb-4">
-    <button id="addExpense" class="btn btn-gray">+ مصروف</button>
-    <button id="endShift" class="btn btn-red">إنهاء الوردية</button>
+function carForm(id){
+  const c=id?state.data.cars[id]:{};
+  const isRent=(c.status||"ملك")==="إيجار";
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">بيانات السيارة</h3>
+  <div class="grid md:grid-cols-2 gap-2">
+    <div><label class="label">الماركة</label><input id="cBrand" class="field" value="${esc(c.brand||c.name||"")}"></div>
+    <div><label class="label">الموديل</label><input id="cModel" class="field" value="${esc(c.model||"")}"></div>
+    <div><label class="label">السنة</label><input id="cYear" class="field" value="${esc(c.year||"")}"></div>
+    <div>
+      <label class="label">الحالة</label>
+      <select id="cStatus" class="field" onchange="document.getElementById('rentFieldsBox').classList.toggle('hidden',this.value!=='إيجار')">
+        <option value="ملك" ${!isRent?"selected":""}>ملك</option>
+        <option value="إيجار" ${isRent?"selected":""}>إيجار</option>
+      </select>
+    </div>
+    <div><label class="label">الرصيد الافتتاحي</label><input id="cOpen" class="field" type="number" step="0.01" value="${c.openingBalance??c.initBalance??0}"></div>
   </div>
-  <div class="space-y-3">
-    ${trips.map(t => {
-      const phone = t.customerPhone || "";
-      return `<div class="card p-4">
-        <div class="flex justify-between"><b>${esc(t.customerName||"رحلة")}</b><b>${money(t.amount)}</b></div>
-        <div class="small mt-1">${dateTime(t.tripAt)} • ${esc(t.pickupAddress||"")} → ${esc(t.dropoffAddress||"")}</div>
-        <div class="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-gray-100">
-          <button class="btn btn-blue text-xs" data-return-trip="${esc(t.id)}">↩️ رجوع للمتاحة</button>
-          <button class="btn btn-red text-xs" data-cancel-trip="${esc(t.id)}">❌ إلغاء نهائي</button>
+
+  <div id="rentFieldsBox" class="${isRent?"":"hidden"} mt-2.5 p-2.5 border border-amber-500/30 rounded-xl bg-amber-950/20">
+    <h4 class="font-bold text-amber-400 mb-2 text-[11px]">بيانات الإيجار</h4>
+    <div class="grid md:grid-cols-2 gap-2">
+      <div><label class="label">اسم المالك</label><input id="cOwnerName" class="field" value="${esc(c.ownerName||"")}"></div>
+      <div><label class="label">رقم الموبايل</label><input id="cOwnerPhone" class="field" inputmode="tel" value="${esc(c.ownerPhone||"")}"></div>
+      <div><label class="label">قيمة الإيجار</label><input id="cRentMonthly" class="field" type="number" step="0.01" value="${c.rentMonthly||c.rentAmount||0}"></div>
+      <div><label class="label">يوم السداد (1-31)</label><input id="cRentDate" class="field" type="number" min="1" max="31" value="${esc(c.rentDate||"")}"></div>
+      <div class="md:col-span-2 text-[10px] text-amber-300 font-bold">🔔 تنبيه تلقائي قبل الموعد بـ 3 أيام.</div>
+    </div>
+  </div>
+
+  <div class="flex gap-2 mt-3"><button id="saveCar" class="btn btn-primary text-xs">حفظ</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+
+  document.getElementById("saveCar").onclick=async()=>{
+    const statusVal=val("cStatus");
+    const x={
+      brand:val("cBrand"),model:val("cModel"),year:val("cYear"),status:statusVal,openingBalance:num("cOpen"),
+      ownerName:statusVal==="إيجار"?val("cOwnerName"):"",ownerPhone:statusVal==="إيجار"?val("cOwnerPhone"):"",
+      rentMonthly:statusVal==="إيجار"?num("cRentMonthly"):0,rentDate:statusVal==="إيجار"?val("cRentDate"):"",updatedAt:Date.now()
+    };
+    if(!x.brand)return toast("أدخل الماركة",true);
+    try{
+      if(id)await update(ref(db,"cars/"+id),x);
+      else{const r=push(ref(db,"cars"));await set(r,{...x,id:r.key,createdAt:Date.now()})}
+      closeModal();toast("تم حفظ السيارة");render();
+    }catch(e){toast("تعذر الحفظ: "+e.message,true)}
+  };
+}
+
+function carRentPay(id){payForm("سداد سيارة","car",id,Math.max(0,carBalance(id).rentDue-carBalance(id).rentPaid||100000))}
+function carAdvance(id){advanceForm("car",id)}
+
+function payForm(title,type,id){
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">${title}</h3>
+  <label class="label">المبلغ المدفوع</label><input id="payValue" class="field" type="number" step="0.01">
+  <label class="label mt-2">طريقة الدفع</label>
+  <select id="payMethod" class="field"><option>كاش</option><option>انستاباي</option><option>محفظة إلكترونية</option><option>تحويل بنكي</option></select>
+  <div class="flex gap-2 mt-3"><button id="confirmPay" class="btn btn-green text-xs">تأكيد السداد</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+  document.getElementById("confirmPay").onclick=async()=>{
+    const amount=num("payValue");
+    if(amount<=0)return toast("المبلغ غير صحيح",true);
+    try{
+      if(type==="driver"){
+        const d=state.data.drivers[id],r=push(ref(db,"payments"));
+        await set(r,{id:r.key,partyType:"driver",partyId:id,amount,method:val("payMethod"),createdAt:Date.now()});
+        await treasuryRecord(-amount,"سداد للسائق: "+(d?.name||""),"سداد سائق");
+        const shifts=vals(state.data.shifts).filter(s=>s.driverId===id).sort((a,b)=>(a.openedAt||0)-(b.openedAt||0));
+        let left=amount;
+        for(const s of shifts){
+          const due=Number(s.driverDue)||0,paid=Number(s.paidNow)||0,remain=Math.max(0,due-paid);
+          if(remain<=0)continue;
+          const x=Math.min(left,remain);
+          await update(ref(db,"shifts/"+s.id),{paidNow:paid+x});
+          left-=x;if(left<=0)break;
+        }
+      }else{
+        const c=state.data.cars[id],r=push(ref(db,"rentPayments"));
+        await set(r,{id:r.key,carId:id,amount,dueAmount:0,method:val("payMethod"),createdAt:Date.now()});
+        await treasuryRecord(-amount,"سداد سيارة: "+(c?.brand||""),"سداد سيارة");
+      }
+      closeModal();toast("تم السداد وتسجيله في الخزنة");render();
+    }catch(e){toast("تعذر تسجيل السداد: "+e.message,true)}
+  };
+}
+
+function advanceForm(type,id){
+  const obj=type==="driver"?state.data.drivers[id]:state.data.cars[id];
+  const name=type==="driver"?obj?.name:(obj?.brand||"السيارة")+" "+(obj?.model||"");
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">＋ سلفة — ${esc(name||"")}</h3>
+  <div class="grid gap-2">
+    <div><label class="label">قيمة السلفة</label><input id="advAmount" class="field" type="number" step="0.01"></div>
+    <div><label class="label">نوع السداد</label><select id="advMode" class="field" onchange="document.getElementById('advMonthlyBox').classList.toggle('hidden',this.value!=='جزئي')"><option value="كلي">سداد كلي</option><option value="جزئي">سداد جزئي</option></select></div>
+    <div id="advMonthlyBox" class="hidden"><label class="label">السداد كل شهر</label><input id="advMonthly" class="field" type="number" step="0.01"></div>
+  </div>
+  <div class="flex gap-2 mt-3"><button id="saveAdv" class="btn btn-primary text-xs">حفظ السلفة</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+  document.getElementById("saveAdv").onclick=async()=>{
+    const amount=num("advAmount"),mode=val("advMode"),monthly=num("advMonthly");
+    if(amount<=0)return toast("أدخل مبلغ السلفة",true);
+    if(mode==="جزئي"&&monthly<=0)return toast("أدخل قيمة السداد الشهري",true);
+    try{
+      const r=push(ref(db,"advances"));
+      await set(r,{id:r.key,partyType:type,partyId:id,amount,paid:0,mode,monthlyPayment:mode==="جزئي"?monthly:amount,createdAt:Date.now()});
+      await treasuryRecord(-amount,"صرف سلفة لـ "+name,"صرف سلفة");
+      closeModal();toast("تم تسجيل السلفة في السحابة والخزنة");render();
+    }catch(e){toast("تعذر تسجيل السلفة: "+e.message,true)}
+  };
+}
+
+function details(type,id){
+  const b=type==="driver"?driverBalance(id):carBalance(id);
+  const obj=type==="driver"?state.data.drivers[id]:state.data.cars[id];
+  const name=type==="driver"?obj?.name:(obj?.brand||"")+" "+(obj?.model||"");
+  openModal(`<h3 class="text-lg font-black mb-2.5 text-white">📋 تفاصيل ${esc(name)}</h3>
+  <div class="grid md:grid-cols-2 gap-2 text-[11px]">
+    <div class="card p-2.5">الرصيد الافتتاحي<br><b class="text-white">${money(b.opening)}</b></div>
+    <div class="card p-2.5">الرصيد الحالي<br><b class="${b.balance>=0?"good":"bad"} text-xs">${money(Math.abs(b.balance))} ${b.balance>=0?"له":"عليه"}</b></div>
+    ${type==="driver"?`<div class="card p-2.5">المستحق من الورديات<br><b class="text-white">${money(b.earned)}</b></div><div class="card p-2.5">السداد<br><b class="text-white">${money(b.paid)}</b></div>`:
+    `<div class="card p-2.5">الإيجار/المستحق<br><b class="text-white">${money(b.rentDue)}</b></div><div class="card p-2.5">المدفوع<br><b class="text-white">${money(b.rentPaid)}</b></div>`}
+    <div class="card p-2.5 md:col-span-2">السلف المتبقية<br><b class="text-white">${money(b.advOutstanding)}</b></div>
+  </div>
+  <button class="btn btn-gray text-xs mt-3" onclick="closeModal()">إغلاق</button>`);
+}
+
+function availableTrips(){
+  const arr=vals(state.data.availableTrips).sort((a,b)=>(a.tripAt||0)-(b.tripAt||0));
+  return layout("الرحلات المتاحة","إضافة الرحلات ومتابعتها")+
+  `<button class="btn btn-primary mb-2 text-xs" data-action="newAvailableTrip">＋ إضافة رحلة جديدة</button>
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-2">
+  ${arr.map(t=>{
+    const phone=esc(t.customerPhone||"");
+    const cleanPhone=phone.replace(/[^0-9+]/g,'');
+    return `<div class="card p-2.5 flex flex-col justify-between">
+      <div>
+        <div class="flex justify-between items-center">
+          <b class="text-white text-xs">${esc(t.customerName||"عميل")}</b>
+          <span class="badge ${t.status==="متاحة"?"open":"closed"}">${esc(t.status||"متاحة")}</span>
         </div>
-        ${phone ? `<div class="grid grid-cols-2 gap-2 mt-2">
-          <button class="btn btn-dark text-xs" data-booked-call="${esc(phone)}">📞 اتصال بالعميل</button>
-          <button class="btn btn-whatsapp text-xs" data-booked-whatsapp="${esc(phone)}">💬 واتساب</button>
-        </div>` : ""}
-      </div>`;
-    }).join("") || "<div class='card p-5 text-center text-gray-500'>لم تُسجل رحلات محجوزة بعد.</div>"}
-  </div>`;
-
-  $("addExpense").onclick = expenseForm;
-  $("endShift").onclick = () => endShiftForm(s, revenue, exp, driverPct, net, trips);
-
-  $("view").querySelectorAll("[data-return-trip]").forEach(b => b.onclick = () => returnTripToAvailable(b.dataset.returnTrip, s.id));
-  $("view").querySelectorAll("[data-cancel-trip]").forEach(b => b.onclick = () => cancelTripFinal(b.dataset.cancelTrip, s.id));
-
-  $("view").querySelectorAll("[data-booked-call]").forEach(b => b.onclick = () => { const phone = b.dataset.bookedCall; if(phone) location.href=`tel:${phone}`; });
-  $("view").querySelectorAll("[data-booked-whatsapp]").forEach(b => b.onclick = () => { const phone = b.dataset.bookedWhatsapp; if(phone) window.open(`https://wa.me/${phone.replace(/[^0-9]/g,"")}`,"_blank"); });
+        <div class="small mt-1">${dateTime(t.tripAt)} • <b class="text-white">${money(t.amount)}</b></div>
+        <div class="small mt-1 leading-relaxed">📍 ${esc(t.pickupAddress||"")}<br>🏁 ${esc(t.dropoffAddress||"")}</div>
+        ${phone?`<div class="mt-2 flex items-center gap-1.5">
+          <span class="text-[11px] font-bold text-slate-300">${phone}</span>
+          <a href="tel:${cleanPhone}" class="btn btn-green text-[10px] py-1 px-1.5" title="اتصال">📞 اتصال</a>
+          <a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-green text-[10px] py-1 px-1.5 bg-emerald-800" title="واتساب">💬 واتس</a>
+        </div>`:""}
+      </div>
+      <div class="flex gap-1 mt-2.5 pt-2 border-t border-slate-800">
+        <button class="btn btn-gray text-[10px] py-1 flex-1" data-action="editAvailableTrip" data-id="${t.id}">✏️ تعديل</button>
+        <button class="btn btn-red text-[10px] py-1 flex-1" data-action="deleteAvailableTrip" data-id="${t.id}">🗑️ حذف</button>
+      </div>
+    </div>`;
+  }).join("")||"<p class='small'>لا توجد رحلات متاحة.</p>"}</div>`;
 }
 
-async function returnTripToAvailable(tripId, shiftId){
-  if(!confirm("هل أنت متأكد من إرجاع الرحلة إلى قائمة الرحلات المتاحة وحذفها من ورديتك؟")) return;
-  
-  await update(ref(db, "availableTrips/" + tripId), {
-    status: "متاحة",
-    driverId: null,
-    driverName: null,
-    shiftId: null,
-    shiftNo: null,
-    bookedAt: null
-  });
-
-  await set(ref(db, "trips/" + tripId), null);
-  await update(ref(db, "shifts/" + shiftId + "/tripIds"), { [tripId]: null });
-
-  toast("تم إرجاع الرحلة للرحلات المتاحة وحذفها من ورديتك بنجاح");
+function availableTripForm(id){
+ const t=id?(state.data.availableTrips||{})[id]:{};
+ const dateValue=t.tripAt?new Date(t.tripAt).toISOString().slice(0,10):new Date().toISOString().slice(0,10);
+ const timeValue=t.tripAt?new Date(t.tripAt).toTimeString().slice(0,5):"";
+ openModal(`<h3 class='text-base font-black mb-2.5 text-white'>${id?"✏️ تعديل الرحلة":"📍 تسجيل رحلة متاحة جديدة"}</h3>
+ <div class='grid md:grid-cols-2 gap-2'>
+  <div><label class='label'>تاريخ الرحلة</label><input id='atDate' class='field' type='date' value='${dateValue}'></div>
+  <div><label class='label'>وقت الرحلة</label><input id='atTime' class='field' type='time' value='${timeValue}'></div>
+  <div><label class='label'>قيمة الرحلة</label><input id='atAmount' class='field' type='number' step='0.01' value='${t.amount??""}'></div>
+  <div><label class='label'>اسم العميل</label><input id='atCustomer' class='field' value='${esc(t.customerName||"")}'></div>
+  <div><label class='label'>رقم الهاتف</label><input id='atPhone' class='field' inputmode='tel' value='${esc(t.customerPhone||"")}'></div>
+  <div class='md:col-span-2'><label class='label'>موقع الإقلاع</label><input id='atPickup' class='field' value='${esc(t.pickupAddress||"")}'></div>
+  <div class='md:col-span-2'><label class='label'>موقع النزول</label><input id='atDropoff' class='field' value='${esc(t.dropoffAddress||"")}'></div>
+ </div>
+ <div class='flex gap-2 mt-3'><button id='saveAvailableTrip' class='btn btn-primary text-xs'>${id?"حفظ التعديل":"حفظ الرحلة"}</button><button class='btn btn-gray text-xs' onclick='closeModal()'>إلغاء</button></div>`);
+ document.getElementById("saveAvailableTrip").onclick=async()=>{
+   const d=val("atDate"),tm=val("atTime");
+   if(!d||!tm)return toast("حدد تاريخ ووقت الرحلة",true);
+   if(!val("atCustomer"))return toast("اكتب اسم العميل",true);
+   if(num("atAmount")<=0)return toast("اكتب قيمة الرحلة",true);
+   if(!val("atPickup")||!val("atDropoff"))return toast("اكتب موقع الإقلاع والنزول",true);
+   const data={
+     tripAt:new Date(d+"T"+tm).getTime(),
+     amount:num("atAmount"),
+     customerName:val("atCustomer"),
+     customerPhone:val("atPhone"),
+     pickupAddress:val("atPickup"),
+     dropoffAddress:val("atDropoff"),
+     status:t.status||"متاحة",
+     updatedAt:Date.now()
+   };
+   if(id){
+     await update(ref(db,"availableTrips/"+id),data);
+     toast("تم تعديل الرحلة");
+   }else{
+     const r=push(ref(db,"availableTrips"));
+     await set(r,{id:r.key,...data,createdAt:Date.now()});
+     toast("تم تسجيل الرحلة وأصبحت متاحة للسائقين");
+   }
+   closeModal();render();
+ };
 }
 
-async function cancelTripFinal(tripId, shiftId){
-  if(!confirm("هل أنت متأكد من إلغاء الرحلة نهائياً؟")) return;
-  await update(ref(db, "availableTrips/" + tripId), { status: "ملغية", cancelledAt: now() });
-  await update(ref(db, "trips/" + tripId), { status: "ملغية", cancelledAt: now() });
-  await update(ref(db, "shifts/" + shiftId + "/tripIds"), { [tripId]: null });
-  toast("تم إلغاء الرحلة نهائياً");
+async function deleteAvailableTrip(id){
+ if(!confirm("هل أنت متأكد من حذف هذه الرحلة نهائيًا؟"))return;
+ await remove(ref(db,"availableTrips/"+id));
+ toast("تم حذف الرحلة");
+ render();
+}
+
+function customers(){
+  return layout("العملاء","إدارة العملاء")+
+  `<button class="btn btn-primary mb-2 text-xs" data-action="newCustomer">+ إضافة عميل</button>
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-2">${vals(state.data.customers).map(c=>`<button class="card p-2.5 text-right" data-action="customerDetails" data-id="${c.id}"><b class="text-white text-xs">${esc(c.name)}</b><div class="small">${esc(c.phone||"")}</div></button>`).join("")||"<p class='small'>لا توجد بيانات.</p>"}</div>`;
+}
+function customerForm(id){
+  const c=id?state.data.customers[id]:{};
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">عميل</h3><div class="grid md:grid-cols-2 gap-2"><input id="cuName" class="field" placeholder="الاسم" value="${esc(c.name||"")}"><input id="cuPhone" class="field" placeholder="الهاتف" value="${esc(c.phone||"")}"></div><div class="flex gap-2 mt-3"><button id="saveCustomer" class="btn btn-primary text-xs">حفظ</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+  document.getElementById("saveCustomer").onclick=async()=>{
+    if(!val("cuName"))return toast("أدخل الاسم",true);
+    const x={name:val("cuName"),phone:val("cuPhone"),updatedAt:Date.now()};
+    try{if(id)await update(ref(db,"customers/"+id),x);else{const r=push(ref(db,"customers"));await set(r,{...x,id:r.key,createdAt:Date.now()})}closeModal();toast("تم الحفظ");render()}catch(e){toast(e.message,true)}
+  };
+}
+function customerDetails(id){const c=state.data.customers[id];if(c)openModal(`<h3 class="text-lg font-black text-white">${esc(c.name)}</h3><p class="small mt-1">${esc(c.phone||"")}</p><button class="btn btn-gray text-xs mt-3" onclick="closeModal()">إغلاق</button>`)}
+
+function shifts(){
+  const arr=vals(state.data.shifts).sort((a,b)=>(b.openedAt||0)-(a.openedAt||0));
+  return layout("الورديات","فتح وإغلاق الورديات")+
+  `<button class="btn btn-primary mb-2 text-xs" data-action="newShift">+ وردية جديدة</button>
+  <div class="card p-1.5 tablewrap"><table class="table text-[11px]"><thead><tr><th>الوردية</th><th>السائق</th><th>السيارة</th><th>الحالة</th><th>الإيراد</th><th></th></tr></thead><tbody>
+  ${arr.map(s=>{const c=shiftCalc(s);return `<tr><td>${esc(s.shiftNo||s.id)}</td><td>${esc(s.driverName||"")}</td><td>${esc(s.carName||"")}</td><td><span class="badge ${s.status==="مفتوحة"?"open":"closed"}">${esc(s.status||"")}</span></td><td>${money(c.revenue)}</td><td><button class="btn btn-gray text-[10px] py-1 px-1.5" data-action="shiftDetails" data-id="${s.id}">التفاصيل</button></td></tr>`}).join("")}</tbody></table></div>`;
 }
 
 function shiftForm(){
-  const cars = Object.values(state.data.cars || {});
-  modal(`<h3 class="text-xl font-black">🚦 فتح وردية جديدة</h3>
-    <p class="small mt-1">السائق: ${esc(state.driver.name)}</p>
-    <label class="label mt-5">اختيار السيارة</label>
-    <select id="shiftCar" class="field"><option value="">اختر السيارة</option>${cars.map(c => `<option value="${esc(c.id)}">${esc(c.name||[c.brand,c.model,c.year].filter(Boolean).join(" "))}</option>`).join("")}</select>
-    <button id="saveShift" class="btn btn-primary w-full mt-5">فتح الوردية</button>
-    <button class="btn btn-gray w-full mt-2" onclick="closeModal()">إلغاء</button>`);
-  $("saveShift").onclick = async () => {
-    const carId = val("shiftCar"); if(!carId) return toast("اختر السيارة", true);
-    if(activeShift()) return toast("لديك وردية مفتوحة بالفعل", true);
-    const id = push(ref(db, "shifts")).key;
-    const shiftNo = "W-" + new Date().getFullYear() + "-" + String(Date.now()).slice(-6);
-    const car = state.data.cars[carId] || {};
-    await set(ref(db, "shifts/" + id), {id, shiftNo, driverId: state.driver.id, driverName: state.driver.name, carId, carName: car.name || [car.brand,car.model,car.year].filter(Boolean).join(" "), status: "مفتوحة", startedAt: now(), tripIds: {}});
-    closeModal(); toast("تم فتح الوردية"); render();
+  const ds=vals(state.data.drivers),cs=vals(state.data.cars);
+  if(!ds.length||!cs.length)return toast("أضف سائقاً وسيارة أولاً",true);
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">فتح وردية</h3><div class="grid md:grid-cols-2 gap-2"><select id="sDriver" class="field">${ds.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join("")}</select><select id="sCar" class="field">${cs.map(c=>`<option value="${c.id}">${esc(c.brand||c.name||"")} ${esc(c.model||"")}</option>`).join("")}</select></div><div class="flex gap-2 mt-3"><button id="saveShift" class="btn btn-primary text-xs">فتح الوردية</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+  document.getElementById("saveShift").onclick=async()=>{
+    const d=state.data.drivers[val("sDriver")],c=state.data.cars[val("sCar")];
+    if(!d||!c)return toast("بيانات غير صحيحة",true);
+    if(vals(state.data.shifts).some(s=>s.driverId===d.id&&s.status==="مفتوحة"))return toast("السائق لديه وردية مفتوحة",true);
+    const r=push(ref(db,"shifts"));
+    await set(r,{id:r.key,shiftNo:"WR-"+Date.now(),driverId:d.id,driverName:d.name,driverPercent:Number(d.percent)||0,carId:c.id,carName:(c.brand||c.name||"")+" "+(c.model||""),status:"مفتوحة",openedAt:Date.now(),createdAt:Date.now()});
+    closeModal();toast("تم فتح الوردية");render();
   };
 }
 
-function expenseForm(){
-  fuelPhotoData = "";
-  modal(`<h3 class="text-xl font-black">💸 تسجيل مصروف</h3>
-    <label class="label mt-4">نوع المصروف</label>
-    <select id="exType" class="field">
-      <option>بنزين</option><option>مصروف شخصي للسائق</option><option>صيانة</option><option>غيار زيت</option><option>دفع مبلغ للمالك</option><option>أخرى</option>
-    </select>
-    <label class="label mt-4">المبلغ</label><input id="exAmount" class="field" type="number" step="0.01">
-    <label class="label mt-4">ملاحظات</label><input id="exNote" class="field">
-    <div id="fuelBox" class="mt-4"></div>
-    <button id="saveExpense" class="btn btn-primary w-full mt-5">حفظ المصروف</button>`);
+function shiftDetails(id){
+  const s=state.data.shifts[id];if(!s)return;
+  const c=shiftCalc(s);
+  const isOpen=s.status==="مفتوحة";
 
-  const typeChanged = async () => {
-    stopFuelCamera();
-    fuelPhotoData = "";
-    if($("exType").value !== "بنزين"){
-      $("fuelBox").innerHTML = "";
-      return;
-    }
-    $("fuelBox").innerHTML = `
-      <div class="rounded-2xl border border-yellow-300 bg-yellow-50 p-3">
-        <div class="font-black text-yellow-800">📷 تصوير عداد محطة البنزين إجباري</div>
-        <div class="small mt-1">يجب التقاط صورة الشاشة/العداد لحفظ المصروف.</div>
+  openModal(`<h3 class="text-base font-black text-white mb-1">📋 تفاصيل الوردية: ${esc(s.shiftNo)}</h3>
+  <p class="small mb-3">السائق: <b class="text-white">${esc(s.driverName)}</b> • السيارة: <b class="text-white">${esc(s.carName)}</b> • الحالة: <span class="badge ${isOpen?"open":"closed"}">${esc(s.status)}</span></p>
+
+  <div class="grid grid-cols-2 gap-2 text-[11px] mb-3">
+    <div class="card p-2">إجمالي الإيرادات<br><b class="text-white text-xs">${money(c.revenue)}</b></div>
+    <div class="card p-2">إجمالي المصاريف<br><b class="text-white text-xs">${money(c.expenses)}</b></div>
+    <div class="card p-2">نسبة السائق (${s.driverPercent}%)<br><b class="text-white text-xs">${money(c.pct)}</b></div>
+    <div class="card p-2">صافي الوردية<br><b class="text-emerald-400 text-xs">${money(c.net)}</b></div>
+  </div>
+
+  <div class="card p-2 mb-3">
+    <h4 class="font-bold text-amber-400 text-xs mb-1.5">🚗 قائمة الرحلات (${c.trips.length})</h4>
+    ${c.trips.length>0?`<div class="tablewrap"><table class="table text-[10px]"><thead><tr><th>الوقت</th><th>المبلغ</th></tr></thead><tbody>
+    ${c.trips.map(t=>`<tr><td>${dateTime(t.createdAt)}</td><td>${money(t.amount)}</td></tr>`).join("")}
+    </tbody></table></div>`:`<p class='small'>لا توجد رحلات مسجلة في هذه الوردية.</p>`}
+  </div>
+
+  <div class="card p-2 mb-3">
+    <h4 class="font-bold text-red-400 text-xs mb-1.5">💸 قائمة المصاريف (${c.ex.length})</h4>
+    ${c.ex.length>0?`<div class="space-y-2">
+    ${c.ex.map(e=>`<div class="flex items-center justify-between p-1.5 rounded bg-slate-950 border border-slate-800 text-[11px]">
+      <div>
+        <b>${esc(e.type)}</b>: <span class="text-white">${money(e.amount)}</span>
+        ${e.note?`<div class="small text-[10px]">ملاحظة: ${esc(e.note)}</div>`:""}
       </div>
-      <div class="mt-3 rounded-2xl overflow-hidden bg-black relative">
-        <video id="fuelVideo" autoplay playsinline muted class="w-full" style="max-height:360px;object-fit:cover"></video>
-        <div id="cameraLoading" class="absolute inset-0 flex items-center justify-center text-white bg-black/50 font-bold">جاري فتح الكاميرا…</div>
-      </div>
-      <canvas id="fuelCanvas" class="hidden"></canvas>
-      <img id="fuelPreview" class="hiddenx w-full rounded-2xl mt-3" alt="صورة العداد">
-      <div class="grid grid-cols-2 gap-2 mt-3">
-        <button id="captureFuel" type="button" class="btn btn-dark">📸 التقاط الصورة</button>
-        <button id="retakeFuel" type="button" class="btn btn-gray hiddenx">🔄 إعادة التصوير</button>
-      </div>
-      <div id="cameraError" class="text-red-600 text-sm font-bold mt-2"></div>`;
-    await startFuelCamera();
-  };
+      ${e.imageUrl?`<a href="${esc(e.imageUrl)}" target="_blank"><img src="${esc(e.imageUrl)}" class="w-10 h-10 object-cover rounded border border-slate-700" alt="صورة المصروف"></a>`:`<span class="small text-[10px]">بدون صورة</span>`}
+    </div>`).join("")}
+    </div>`:`<p class='small'>لا توجد مصاريف مسجلة في هذه الوردية.</p>`}
+  </div>
 
-  $("exType").onchange = typeChanged;
-  typeChanged();
+  <div class="flex flex-wrap gap-1.5 mt-3">
+    ${isOpen?`<button class="btn btn-primary text-[11px] py-1 px-2" data-action="addTrip" data-id="${id}">+ رحلة</button>
+              <button class="btn btn-red text-[11px] py-1 px-2" data-action="addExpense" data-id="${id}">+ مصروف</button>
+              <button class="btn btn-dark text-[11px] py-1 px-2 border border-slate-700" data-action="closeShift" data-id="${id}">🔒 إنهاء الوردية</button>`:""}
+    <button class="btn btn-gray text-[11px] py-1 px-2" onclick="closeModal()">إغلاق</button>
+  </div>`);
+  bindView();
+}
 
-  $("saveExpense").onclick = async () => {
-    const s = activeShift(), amount = num("exAmount"), type = val("exType");
-    if(!s || amount <= 0) return toast("راجع الوردية والمبلغ", true);
-    if(type === "بنزين" && !fuelPhotoData) return toast("لا يمكن حفظ مصروف البنزين بدون التقاط صورة العداد", true);
-    const id = push(ref(db, "expenses")).key;
-    await set(ref(db, "expenses/" + id), {
-      id, shiftId: s.id, driverId: state.driver.id, type, amount, note: val("exNote"), createdAt: now(),
-      personal: type === "مصروف شخصي للسائق",
-      ...(type === "بنزين" ? {fuelPhoto: fuelPhotoData, fuelPhotoTakenAt: now()} : {})
-    });
-    closeModal(); toast("تم تسجيل المصروف"); render();
+function closeShift(id){
+  const s=state.data.shifts[id];if(!s||s.status!=="مفتوحة")return;
+  const c=shiftCalc(s);
+  openModal(`<h3 class="text-base font-black text-white">🔒 إنهاء الوردية</h3><p class="mt-2 text-xs">الإيراد: <b class="text-white">${money(c.revenue)}</b></p><p class="text-xs">الصافي: <b class="text-white">${money(c.net)}</b></p><div class="flex gap-2 mt-3"><button id="confirmClose" class="btn btn-dark text-xs border border-slate-700">تأكيد الإغلاق</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+  document.getElementById("confirmClose").onclick=async()=>{
+    await update(ref(db,"shifts/"+id),{status:"منتهية",closedAt:Date.now(),revenue:c.revenue,expenses:c.expenses,net:c.net,driverDue:Math.max(0,c.revenue-c.pct-c.personal)});
+    closeModal();toast("تم إغلاق الوردية");render();
   };
 }
 
-async function startFuelCamera(){
-  const video = $("fuelVideo"), loading = $("cameraLoading"), err = $("cameraError");
-  if(!video) return;
-  try{
-    fuelCameraStream = await navigator.mediaDevices.getUserMedia({
-      video: {facingMode: {ideal: "environment"}, width: {ideal: 1280}, height: {ideal: 720}},
-      audio: false
-    });
-    video.srcObject = fuelCameraStream;
-    await video.play();
-    loading?.classList.add("hiddenx");
-    $("captureFuel").onclick = captureFuelPhoto;
-    $("retakeFuel").onclick = async () => {
-      fuelPhotoData = "";
-      $("fuelPreview").classList.add("hiddenx");
-      $("captureFuel").classList.remove("hiddenx");
-      $("retakeFuel").classList.add("hiddenx");
-      await startFuelCamera();
-    };
-  }catch(e){
-    loading?.classList.add("hiddenx");
-    if(err) err.textContent = "تعذر فتح الكاميرا: " + (e?.message || e);
-    $("captureFuel").disabled = true;
-  }
-}
-
-function captureFuelPhoto(){
-  const video = $("fuelVideo"), canvas = $("fuelCanvas"), preview = $("fuelPreview");
-  if(!video || !canvas || !video.videoWidth) return toast("الكاميرا لم تجهز بعد", true);
-  const maxW = 900;
-  const scale = Math.min(1, maxW / video.videoWidth);
-  canvas.width = Math.round(video.videoWidth * scale);
-  canvas.height = Math.round(video.videoHeight * scale);
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  fuelPhotoData = canvas.toDataURL("image/jpeg", 0.72);
-  preview.src = fuelPhotoData;
-  preview.classList.remove("hiddenx");
-  $("captureFuel").classList.add("hiddenx");
-  $("retakeFuel").classList.add("hiddenx");
-  stopFuelCamera();
-  toast("تم التقاط صورة العداد بنجاح.");
-}
-
-function endShiftForm(s, revenue, exp, driverPct, net, trips){
-  modal(`<h3 class="text-xl font-black">🔒 إنهاء الوردية</h3>
-    <div class="grid grid-cols-2 gap-3 mt-4">
-      <div class="card p-3"><span class="small">إجمالي الإيرادات</span><b class="block mt-1">${money(revenue)}</b></div>
-      <div class="card p-3"><span class="small">إجمالي المصاريف</span><b class="block mt-1">${money(exp)}</b></div>
-      <div class="card p-3"><span class="small">إجمالي نسبة السائق</span><b class="block mt-1">${money(driverPct)}</b></div>
-      <div class="card p-3"><span class="small">صافي الوردية</span><b class="block mt-1">${money(net)}</b></div>
-    </div>
-    <label class="label mt-5">المبلغ المدفوع الآن للسائق</label>
-    <input id="paidNow" class="field" type="number" step="0.01" value="0">
-    <div class="card p-4 mt-3 bg-yellow-50"><span class="small">الباقي للسائق المرحل للتراكمي</span><div id="carry" class="font-black text-xl mt-1">${money(driverPct)}</div></div>
-    <button id="confirmEnd" class="btn btn-red w-full mt-5">حفظ وإنهاء الوردية</button>`);
-  const updateCarry = () => { $("carry").textContent = money(Math.max(0, driverPct - num("paidNow"))); };
-  $("paidNow").oninput = updateCarry; updateCarry();
-  $("confirmEnd").onclick = async () => {
-    const paid = Math.max(0, num("paidNow")), carry = Math.max(0, driverPct - paid);
-    if(paid > driverPct) return toast("المبلغ المدفوع لا يمكن أن يتجاوز نسبة السائق", true);
-    await update(ref(db, "shifts/" + s.id), {
-      status: "مغلقة", endedAt: now(), totalRevenue: revenue, totalExpenses: exp,
-      driverPercentage: driverPct, net, paidToDriver: paid, driverCarry: carry
-    });
-    const aid = push(ref(db, "archives")).key;
-    await set(ref(db, "archives/" + aid), {id: aid, month: new Date().toISOString().slice(0,7), type: "shift", shiftId: s.id, driverId: state.driver.id, driverName: state.driver.name, totalRevenue: revenue, totalExpenses: exp, driverPercentage: driverPct, net, paidToDriver: paid, driverCarry: carry, archivedAt: now()});
-    closeModal(); toast("تم إنهاء الوردية وقفلها"); render();
+function tripForm(shiftId){
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">إضافة رحلة</h3><input id="tAmount" class="field" type="number" placeholder="المبلغ"><div class="flex gap-2 mt-3"><button id="saveTrip" class="btn btn-primary text-xs">حفظ</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+  document.getElementById("saveTrip").onclick=async()=>{
+    if(num("tAmount")<=0)return toast("أدخل المبلغ",true);
+    await set(push(ref(db,"trips")),{shiftId,amount:num("tAmount"),status:"نشطة",createdAt:Date.now()});
+    closeModal();toast("تم حفظ الرحلة");shiftDetails(shiftId);
   };
 }
 
-function renderAccount(){
-  const d = state.driver || {};
-  const shifts = Object.values(state.data.shifts || {}).filter(s => s.driverId === d.id && s.status === "مغلقة");
-  const revenue = shifts.reduce((a,s) => a + Number(s.totalRevenue || 0), 0);
-  const pct = shifts.reduce((a,s) => a + Number(s.driverPercentage || 0), 0);
-  const paid = shifts.reduce((a,s) => a + Number(s.paidToDriver || 0), 0);
-  const carry = shifts.reduce((a,s) => a + Number(s.driverCarry || 0), 0);
-  $("view").innerHTML = `<h2 class="text-2xl font-black mb-4">حسابي</h2>
-  <div class="card p-5">
-    <div class="text-center"><div class="w-20 h-20 rounded-full bg-yellow-100 mx-auto flex items-center justify-center text-3xl">👤</div><h3 class="font-black text-xl mt-3">${esc(d.name||"")}</h3><p class="small">${esc(d.phone||"")}</p></div>
-    <div class="grid grid-cols-2 gap-3 mt-5">
-      <div class="card p-3"><span class="small">إيراداتي</span><b class="block mt-1">${money(revenue)}</b></div>
-      <div class="card p-3"><span class="small">نسبتي</span><b class="block mt-1">${money(pct)}</b></div>
-      <div class="card p-3"><span class="small">المقبوض</span><b class="block mt-1">${money(paid)}</b></div>
-      <div class="card p-3"><span class="small">التراكمي</span><b class="block mt-1">${money(carry)}</b></div>
+function expenseForm(shiftId){
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">تسجيل مصروف</h3>
+  <div class="grid gap-2">
+    <select id="eType" class="field"><option>بنزين</option><option>صيانة</option><option>مصروف شخصي للسائق</option><option>أخرى</option></select>
+    <input id="eAmount" class="field" type="number" placeholder="المبلغ">
+    <input id="eNote" class="field" placeholder="ملاحظة">
+    <div>
+      <label class="label">صورة إيصال المصروف (اختياري)</label>
+      <input id="eImage" class="field text-[11px]" type="file" accept="image/*">
     </div>
   </div>
-  <div class="card p-5 mt-4">
-    <h3 class="font-black text-lg">🔐 كلمة السر</h3>
-    <p class="small mt-1">غيّر كلمة السر في أي وقت.</p>
-    <label class="label mt-4">كلمة السر الحالية</label><input id="oldPass" class="field" type="password">
-    <label class="label mt-3">كلمة السر الجديدة</label><input id="newPass" class="field" type="password">
-    <label class="label mt-3">تأكيد كلمة السر الجديدة</label><input id="newPass2" class="field" type="password">
-    <button id="changePass" class="btn btn-primary w-full mt-4">تغيير كلمة السر</button>
-  </div>`;
-  $("changePass").onclick = changePassword;
+  <div class="flex gap-2 mt-3"><button id="saveExpense" class="btn btn-red text-xs">حفظ المصروف</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+
+  document.getElementById("saveExpense").onclick=async()=>{
+    const amount=num("eAmount");
+    if(amount<=0)return toast("أدخل المبلغ",true);
+    toast("جاري حفظ المصروف...",false);
+
+    let imageUrl="";
+    const fileInput=document.getElementById("eImage");
+    if(fileInput.files[0]){
+      try{
+        const file=fileInput.files[0];
+        const sRefPath=sRef(storage, "expenses/"+Date.now()+"_"+file.name);
+        const snapshot=await uploadBytes(sRefPath, file);
+        imageUrl=await getDownloadURL(snapshot.ref);
+      }catch(err){
+        console.error(err);
+        toast("فشل رفع الصورة، سيتم حفظ المصروف بدونها",true);
+      }
+    }
+
+    await set(push(ref(db,"expenses")),{
+      shiftId,
+      amount,
+      type:val("eType"),
+      note:val("eNote"),
+      imageUrl,
+      createdAt:Date.now()
+    });
+    closeModal();
+    toast("تم حفظ المصروف بنجاح");
+    shiftDetails(shiftId);
+  };
 }
 
-async function changePassword(){
-  const old = val("oldPass"), nw = val("newPass"), nw2 = val("newPass2");
-  if(!old || !nw || !nw2) return toast("املأ الخانات كلها", true);
-  if(nw.length < 4) return toast("كلمة السر يجب أن تكون 4 أرقام/أحرف على الأقل", true);
-  if(nw !== nw2) return toast("تأكيد كلمة السر غير مطابق", true);
-  const d = state.driver;
-  const oldHash = await sha256(old);
-  if(d.passwordHash && d.passwordHash !== oldHash) return toast("كلمة السر الحالية غير صحيحة", true);
-  if(!d.passwordHash && d.password && d.password !== old) return toast("كلمة السر الحالية غير صحيحة", true);
-  
-  const newHash = await sha256(nw);
-  await update(ref(db, "drivers/" + d.id), {passwordHash: newHash, password: null, passwordChangedAt: now()});
-  
-  state.driver = {...d, passwordHash: newHash, password: null};
-  if(state.data.drivers[d.id]){
-    state.data.drivers[d.id].passwordHash = newHash;
-    state.data.drivers[d.id].password = null;
-  }
-  
-  toast("تم تغيير كلمة السر بنجاح");
-  $("oldPass").value = ""; $("newPass").value = ""; $("newPass2").value = "";
+function treasury(){
+  const init=Number(state.data.settings?.vaultInitBalance)||0;
+  const tx=vals(state.data.treasury).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const total=tx.reduce((a,x)=>a+(Number(x.amount)||0),0);
+  return layout("الخزنة","حركات الخزنة والسيولة")+
+  `<div class="grid grid-cols-2 gap-2 mb-2">
+    <div class="kpi bg-slate-900 border border-slate-800 col-span-2">الرصيد الحالي<b class="text-xl sm:text-2xl block mt-1 text-white">${money(init+total)}</b></div>
+    <button data-action="treasuryIn" class="btn btn-green h-12 text-xs">＋ دخل</button>
+    <button data-action="treasuryOut" class="btn btn-red h-12 text-xs">－ خرج</button>
+  </div>
+  <div class="card p-2.5 mb-2"><h3 class="font-black text-xs text-white mb-1.5">الرصيد الافتتاحي</h3><div class="flex gap-2"><input id="vaultInitInput" class="field text-xs" type="number" value="${init}"><button id="saveVaultInit" class="btn btn-primary text-xs">حفظ</button></div></div>
+  <div class="card p-1.5 tablewrap"><table class="table text-[11px]"><thead><tr><th>التاريخ</th><th>البيان</th><th>النوع</th><th>المبلغ</th></tr></thead><tbody>${tx.map(x=>`<tr><td>${dateTime(x.createdAt)}</td><td>${esc(x.description||"")}</td><td>${esc(x.type||"")}</td><td>${money(x.amount)}</td></tr>`).join("")}</tbody></table></div>`;
 }
 
-$("loginBtn").onclick = login;
-$("loginPass").addEventListener("keydown", e => { if(e.key === "Enter") login(); });
-$("reloadDriversBtn").onclick = loadDriversList;
-
-$("logoutBtn").onclick = () => {
-  localStorage.removeItem("goldenFleetDriver");
-  state.driver = null;
-  state.unsub.forEach(u => u && u());
-  state.unsub = [];
-  $("appScreen").classList.add("hiddenx");
-  $("loginScreen").classList.remove("hiddenx");
-  $("loginPass").value = "1234";
-  loadDriversList();
-};
-
-document.querySelectorAll(".nav button").forEach(b => b.onclick = () => { state.view = b.dataset.view; render(); });
-
-signInAnonymously(auth).then(() => restoreLogin()).catch(e => {
-  console.error(e);
-  loadDriversList();
-});
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('Service Worker registered'))
-      .catch(err => console.log('Service Worker failed', err));
-  });
+function treasuryForm(type){
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">${type}</h3><input id="trAmount" class="field" type="number" placeholder="المبلغ"><input id="trDesc" class="field mt-2" placeholder="البيان"><div class="flex gap-2 mt-3"><button id="saveTreasury" class="btn btn-primary text-xs">حفظ</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+  document.getElementById("saveTreasury").onclick=async()=>{if(num("trAmount")<=0)return toast("أدخل مبلغ صحيح",true);await treasuryRecord(type==="دخل"?num("trAmount"):-num("trAmount"),val("trDesc"),type+" - حركة");closeModal();toast("تم الحفظ");render()};
 }
-</script>
-</body>
-</html>
+
+function monthlyObligations(){
+  const debts=vals(state.data.debts);
+  const carRent=vals(state.data.cars).filter(c=>c.status==="إيجار").reduce((a,c)=>a+(Number(c.rentMonthly)||0),0);
+  const houseRent=debts.filter(d=>d.type==="إيجار بيت").reduce((a,d)=>a+(Number(d.monthlyPayment||d.amount)||0),0);
+  const debtMonthly=debts.filter(d=>d.type!=="إيجار بيت"&&d.type!=="سلفة").reduce((a,d)=>a+(Number(d.monthlyPayment)||0),0);
+  const driverDue=vals(state.data.drivers).reduce((a,d)=>a+Math.max(0,driverBalance(d.id).balance),0);
+  return {carRent,houseRent,debtMonthly,driverDue,total:carRent+houseRent+debtMonthly+driverDue};
+}
+
+function debtsView(){
+  const ds=vals(state.data.debts);
+  const total=ds.filter(d=>d.type!=="سلفة"&&d.type!=="الجمعية").reduce((a,d)=>a+(Number(d.amount)||0),0);
+  const ob=monthlyObligations();
+  return layout("الديون والالتزامات","السداد والسلف والفوائد")+
+  `<div class="grid md:grid-cols-2 gap-2 mb-2">
+    <div class="kpi bg-slate-900 border border-slate-800">إجمالي الدين المتبقي<b class="text-lg sm:text-xl block mt-1 text-white">${money(total)}</b></div>
+    <div class="kpi bg-amber-950/60 border border-amber-900/40">المطلوب هذا الشهر<b class="text-lg sm:text-xl block mt-1 text-white">${money(ob.total)}</b></div>
+  </div>
+  <button class="btn btn-primary mb-2 text-xs" data-action="newDebt">+ إضافة دين / التزام</button>
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-2">${ds.map(d=>`<div class="card p-2.5">
+    <b class="text-white text-xs">${esc(d.name)}</b><div class="small mt-0.5">${esc(d.type)} ${d.dueDate?`• سداد: ${d.dueDate}`:""}</div>
+    <div class="mt-1.5 text-[11px]">المتبقي: <b class="text-white">${money(d.amount)}</b></div>
+    ${d.type==="دين بفائدة شهرية"||d.dueDate?`<div class="small mt-0.5">القسط/الفائدة: ${money(d.monthlyPayment)}</div>`:""}
+    <div class="flex flex-wrap gap-1 mt-2.5">
+      <button class="btn btn-green text-[10px] py-1 px-1.5" data-action="debtPay" data-id="${d.id}">سداد</button>
+      ${d.type==="دين بفائدة شهرية"?`<button class="btn btn-primary text-[10px] py-1 px-1.5" data-action="interestPay" data-id="${d.id}">فائدة</button>`:""}
+      <button class="btn btn-dark text-[10px] py-1 px-1.5" data-action="debtAdvance" data-id="${d.id}">＋ سلفة</button>
+      <button class="btn btn-gray text-[10px] py-1 px-1.5" data-action="debtDetails" data-id="${d.id}">تفاصيل</button>
+      <button class="btn btn-red text-[10px] py-1 px-1.5" data-action="deleteDebt" data-id="${d.id}">حذف</button>
+    </div>
+  </div>`).join("")||"<p class='small'>لا توجد ديون.</p>"}</div>`;
+}
+
+function debtForm(){
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">إضافة دين / التزام</h3>
+  <div class="grid gap-2">
+    <div><label class="label">اسم الدائن</label><input id="dn" class="field"></div>
+    <div>
+      <label class="label">النوع</label>
+      <select id="dt" class="field" onchange="document.getElementById('debtExtra').classList.toggle('hidden',this.value!=='سلفة')">
+        <option>دين ثابت</option><option>دين بفائدة شهرية</option><option>الجمعية</option><option>إيجار بيت</option><option>أخرى</option><option>سلفة</option>
+      </select>
+    </div>
+    <div id="debtExtra" class="hidden grid md:grid-cols-2 gap-2">
+      <select id="loanDir" class="field"><option value="له">له</option><option value="عليه">عليه</option></select>
+      <select id="loanSource" class="field"><option value="رأس المال">سلفة من رأس المال</option><option value="الفائدة الشهرية">سلفة من الفائدة الشهرية</option></select>
+    </div>
+    <div><label class="label">المبلغ الأساسي</label><input id="da" class="field" type="number"></div>
+    <div><label class="label">القسط / الفائدة الشهرية</label><input id="dm" class="field" type="number"></div>
+    <div><label class="label">يوم السداد (1 إلى 31)</label><input id="dDate" class="field" type="number" min="1" max="31"></div>
+    <div class="text-[10px] text-amber-400 font-bold">🔔 تنبيه تلقائي قبل الموعد بـ 3 أيام.</div>
+  </div>
+  <div class="flex gap-2 mt-3"><button id="sd" class="btn btn-primary text-xs">حفظ</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+
+  document.getElementById("sd").onclick=async()=>{
+    const x={name:val("dn"),type:val("dt"),amount:num("da"),monthlyPayment:num("dm"),dueDate:val("dDate"),createdAt:Date.now()};
+    if(!x.name||x.amount<=0)return toast("أكمل البيانات",true);
+    if(x.type==="سلفة"){x.loanDirection=val("loanDir");x.loanSource=val("loanSource");}
+    const r=push(ref(db,"debts"));await set(r,{...x,id:r.key});closeModal();toast("تم حفظ الالتزام");render();
+  };
+}
+
+function debtPay(id){const d=state.data.debts[id];if(d)payDebtForm(d,false)}
+function interestPay(id){const d=state.data.debts[id];if(d)payDebtForm(d,true)}
+function payDebtForm(d,interest){
+  const max=interest?Number(d.monthlyPayment)||0:Number(d.amount)||0;
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">${interest?"سداد فائدة الشهر":"سداد الدين"} — ${esc(d.name)}</h3><p class="text-xs">المتاح: <b class="text-white">${money(max)}</b></p><input id="debtPayAmount" class="field mt-2" type="number" value="${max}"><select id="debtPayMethod" class="field mt-2"><option>كاش</option><option>انستاباي</option><option>محفظة إلكترونية</option><option>تحويل بنكي</option></select><div class="flex gap-2 mt-3"><button id="doDebtPay" class="btn btn-green text-xs">تأكيد</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+  document.getElementById("doDebtPay").onclick=async()=>{
+    const p=num("debtPayAmount");if(p<=0||p>max)return toast("المبلغ غير صحيح",true);
+    if(!interest)await update(ref(db,"debts/"+d.id),{amount:Math.max(0,(Number(d.amount)||0)-p)});
+    await treasuryRecord(-p,(interest?"سداد فائدة: ":"سداد دين: ")+d.name,"سداد دين");
+    closeModal();toast("تم السداد وتسجيله في الخزنة");render();
+  };
+}
+
+function debtAdvance(id){
+  const d=state.data.debts[id];if(!d)return;
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">＋ سلفة — ${esc(d.name)}</h3><div clas
