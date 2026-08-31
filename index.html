@@ -795,4 +795,76 @@ function payDebtForm(d,interest){
 
 function debtAdvance(id){
   const d=state.data.debts[id];if(!d)return;
-  openModal(`<h3 class="text-base font-black mb-2.5 text-white">＋ سلفة — ${esc(d.name)}</h3><div clas
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">＋ سلفة — ${esc(d.name)}</h3><div class="grid gap-2"><input id="debtAdvAmount" class="field" type="number" placeholder="قيمة السلفة"><select id="debtAdvDir" class="field"><option value="له">له</option><option value="عليه">عليه</option></select><select id="debtAdvSource" class="field"><option value="رأس المال">من رأس المال</option><option value="الفائدة الشهرية">من الفائدة الشهرية</option></select><select id="debtAdvMode" class="field"><option value="كلي">سداد كلي</option><option value="جزئي">سداد جزئي</option></select><input id="debtAdvMonthly" class="field" type="number" placeholder="السداد الشهري"></div><div class="flex gap-2 mt-3"><button id="saveDebtAdv" class="btn btn-primary text-xs">حفظ</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+  document.getElementById("saveDebtAdv").onclick=async()=>{
+    const amount=num("debtAdvAmount"),mode=val("debtAdvMode"),monthly=num("debtAdvMonthly");
+    if(amount<=0)return toast("أدخل مبلغ السلفة",true);
+    if(mode==="جزئي"&&monthly<=0)return toast("أدخل السداد الشهري",true);
+    const r=push(ref(db,"advances"));
+    await set(r,{id:r.key,partyType:"debt",partyId:id,amount,paid:0,mode,monthlyPayment:mode==="جزئي"?monthly:amount,loanDirection:val("debtAdvDir"),loanSource:val("debtAdvSource"),createdAt:Date.now()});
+    const sign=val("debtAdvDir")==="له"?-1:1;
+    await treasuryRecord(sign*amount,`سلفة ${val("debtAdvDir")} للدين ${d.name}`,"سلفة دين");
+    closeModal();toast("تم تسجيل السلفة");render();
+  };
+}
+
+function debtDetails(id){
+  const d=state.data.debts[id];if(!d)return;
+  openModal(`<h3 class="text-base font-black text-white">${esc(d.name)}</h3><p class="mt-2 text-xs">المتبقي: <b class="text-white">${money(d.amount)}</b></p><p class="text-xs">القسط/الفائدة: <b class="text-white">${money(d.monthlyPayment||0)}</b></p><p class="text-xs mt-1">يوم السداد: <b class="text-white">${d.dueDate?d.dueDate+" من كل شهر":"غير محدد"}</b></p><button class="btn btn-gray text-xs mt-3" onclick="closeModal()">إغلاق</button>`);
+}
+
+function archive(){const arr=vals(state.data.archives);return layout("الأرشيف","البيانات المؤرشفة")+`<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-2">${arr.map(a=>`<div class="card p-2.5 text-xs"><b class="text-white">${esc(a.shiftNo||"")}</b><div class="small">${esc(a.driverName||"")}</div><div>الإيراد: <b class="text-white">${money(a.revenue)}</b></div></div>`).join("")||"<p class='small'>لا توجد سجلات.</p>"}</div>`}
+
+function render(){
+  const v=document.getElementById("view");
+  if(state.view==="dashboard")v.innerHTML=dashboard();
+  else if(state.view==="availableTrips")v.innerHTML=availableTrips();
+  else if(state.view==="drivers")v.innerHTML=drivers();
+  else if(state.view==="cars")v.innerHTML=cars();
+  else if(state.view==="customers")v.innerHTML=customers();
+  else if(state.view==="shifts")v.innerHTML=shifts();
+  else if(state.view==="treasury")v.innerHTML=treasury();
+  else if(state.view==="debts")v.innerHTML=debtsView();
+  else if(state.view==="archive")v.innerHTML=archive();
+  bindView();
+}
+
+function bindView(){
+  document.querySelectorAll("[data-action]").forEach(b=>b.onclick=()=>actions(b.dataset.action,b.dataset.id));
+  const sv=document.getElementById("saveVaultInit");
+  if(sv)sv.onclick=async()=>{await update(ref(db,"settings"),{vaultInitBalance:num("vaultInitInput")});toast("تم حفظ الرصيد");render()};
+}
+
+async function actions(a,id){
+  if(a==="newDriver")return driverForm();
+  if(a==="editDriver")return driverForm(id);
+  if(a==="driverPay")return driverPay(id);
+  if(a==="driverAdvance")return driverAdvance(id);
+  if(a==="driverDetails")return details("driver",id);
+  if(a==="newCar")return carForm();
+  if(a==="editCar")return carForm(id);
+  if(a==="carRentPay")return carRentPay(id);
+  if(a==="carAdvance")return carAdvance(id);
+  if(a==="carDetails")return details("car",id);
+  if(a==="newCustomer")return customerForm();
+  if(a==="customerDetails")return customerDetails(id);
+  if(a==="newShift")return shiftForm();
+  if(a==="shiftDetails")return shiftDetails(id);
+  if(a==="closeShift")return closeShift(id);
+  if(a==="addTrip")return tripForm(id);
+  if(a==="addExpense")return expenseForm(id);
+  if(a==="newAvailableTrip")return availableTripForm();
+  if(a==="editAvailableTrip")return availableTripForm(id);
+  if(a==="deleteAvailableTrip")return deleteAvailableTrip(id);
+  if(a==="treasuryIn")return treasuryForm("دخل");
+  if(a==="treasuryOut")return treasuryForm("خرج");
+  if(a==="newDebt")return debtForm();
+  if(a==="debtPay")return debtPay(id);
+  if(a==="interestPay")return interestPay(id);
+  if(a==="debtAdvance")return debtAdvance(id);
+  if(a==="debtDetails")return debtDetails(id);
+  if(a==="deleteDebt"){if(confirm("حذف الالتزام؟")){await remove(ref(db,"debts/"+id));toast("تم الحذف");render()}}
+}
+</script>
+</body>
+    </html>
