@@ -7,6 +7,11 @@
 <title>الأسطول الذهبي - المالك</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
+.fuel-preview{width:100%;max-height:220px;object-fit:contain;border-radius:12px;border:1px solid #334155;background:#020617}
+.fuel-read{padding:10px;border-radius:12px;background:#020617;border:1px solid #334155}
+.fuel-bars{display:flex;gap:3px;direction:ltr;align-items:end;height:24px}
+.fuel-bars i{display:block;width:12px;height:18px;border-radius:3px 3px 2px 2px;background:#1e293b;border:1px solid #475569}
+.fuel-bars i.on{height:22px;background:#f59e0b;border-color:#fbbf24}
 *{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#000000;color:#f8fafc}
 button,input,select,textarea{font-family:inherit}button{touch-action:manipulation}
 .card{background:#0f172a;border-radius:14px;box-shadow:0 4px 16px #00000088;border:1px solid #1e293b}
@@ -41,8 +46,9 @@ button,input,select,textarea{font-family:inherit}button{touch-action:manipulatio
       <label class="label">كلمة المرور</label>
       <input id="pin" class="field text-center text-xl tracking-[.3em]" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
     </div>
-    <button id="loginBtn" class="btn btn-primary w-full mt-3 py-2.5">🔐 دخول</button>
-    <p id="firebaseStatus" class="small mt-3">جاري الاتصال بالسحابة...</p>
+    <button id="loginBtn" type="button" class="btn btn-primary w-full mt-3 py-2.5"
+onclick="window.goldenFleetLogin && window.goldenFleetLogin()">🔐 دخول</button>
+    <p id="firebaseStatus" class="small mt-3">جاري الاتصال بالسحابة... يمكنك الدخول، وسيتم تحميل البيانات عند اكتمال الاتصال.</p>
   </div>
 </section>
 
@@ -78,6 +84,32 @@ button,input,select,textarea{font-family:inherit}button{touch-action:manipulatio
 </div>
 <div id="modal" class="hidden modal"><div id="modalBox" class="modalbox"></div></div>
 
+<script>
+window.goldenFleetLogin=function(){
+  const pin=document.getElementById("pin");
+  const loginScreen=document.getElementById("loginScreen");
+  const app=document.getElementById("app");
+  const toastEl=document.getElementById("toast");
+  if(!pin)return;
+  if(pin.value!=="6352"){
+    if(toastEl){
+      toastEl.textContent="كلمة المرور غير صحيحة";
+      toastEl.className="toast bg-red-600";
+      clearTimeout(window.__gfLoginToast);
+      window.__gfLoginToast=setTimeout(()=>toastEl.classList.add("hidden"),2600);
+    }
+    return;
+  }
+  if(loginScreen)loginScreen.classList.add("hidden");
+  if(app)app.classList.remove("hidden");
+  // Firebase will render the data as soon as the connection becomes available.
+  if(typeof window.__goldenFleetRender==="function")window.__goldenFleetRender();
+};
+document.addEventListener("DOMContentLoaded",()=>{
+  const p=document.getElementById("pin");
+  if(p)p.addEventListener("keydown",e=>{if(e.key==="Enter")window.goldenFleetLogin();});
+});
+</script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
 import {getDatabase,ref,onValue,push,set,update,remove} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-database.js";
@@ -177,6 +209,7 @@ function showApp(){
   render();
   checkAlerts();
 }
+window.__goldenFleetRender=render;
 function login(){
   if(val("pin")!=="6352")return toast("كلمة المرور غير صحيحة",true);
   showApp();
@@ -216,48 +249,136 @@ if(cloudReady){
 
 function layout(title,sub=""){return `<div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div><h2 class="text-lg font-black text-white">${title}</h2><p class="small">${sub}</p></div></div>`}
 
+
+function expenseImage(e){
+  return e?.fuelPhoto || e?.imageUrl || e?.image || e?.photoUrl || e?.receiptUrl || e?.photo || "";
+}
+function expenseImageHtml(e,small=false){
+  const u=expenseImage(e);
+  if(!u)return `<span class="small text-[10px] text-red-500">بدون صورة</span>`;
+  const cls=small
+    ?"w-12 h-12 object-cover rounded-lg border border-slate-700 cursor-pointer"
+    :"w-20 h-20 object-cover rounded-xl border border-slate-700 cursor-pointer";
+  return `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" class="${cls}" alt="صورة المصروف" loading="lazy"></a>`;
+}
+
 function shiftCalc(s){
   const trips=vals(state.data.trips).filter(t=>t.shiftId===s.id);
   const ex=vals(state.data.expenses).filter(e=>e.shiftId===s.id);
   const revenue=trips.reduce((a,t)=>a+(Number(t.amount)||0),0);
   const expenses=ex.filter(e=>e.type!=="مصروف شخصي للسائق").reduce((a,e)=>a+(Number(e.amount)||0),0);
   const personal=ex.filter(e=>e.type==="مصروف شخصي للسائق").reduce((a,e)=>a+(Number(e.amount)||0),0);
-  const pct=revenue*(Number(s.driverPercent)||0)/100;
-  return {trips,ex,revenue,expenses,personal,pct,net:revenue-expenses-pct};
+  const driverBase=Math.max(0,revenue-expenses);
+  const pct=driverBase*(Number(s.driverPercent)||0)/100;
+  const driverDue=pct-personal;
+  const custody=Number(s.custody)||0;
+  const startBars=Number(s.fuelStartBars);
+  const endBars=Number(s.fuelEndBars);
+  const fuelAdjustment=(Number.isFinite(startBars)&&Number.isFinite(endBars))
+    ? (startBars-endBars)*90 : (Number(s.fuelAdjustment)||0);
+  const net=revenue-expenses-driverDue+custody-fuelAdjustment;
+  return {trips,ex,revenue,expenses,personal,pct,driverBase,driverDue,custody,startBars,endBars,fuelAdjustment,net};
+}
+function fuelBarsHtml(n){
+  n=Math.max(0,Math.min(10,Number(n)||0));
+  return `<div class="fuel-bars">${Array.from({length:10},(_,i)=>`<i class="${i<n?"on":""}"></i>`).join("")}</div>`;
+}
+function fuelInfoHtml(s){
+  const hasStart=Number.isFinite(Number(s.fuelStartBars));
+  const hasEnd=Number.isFinite(Number(s.fuelEndBars));
+  const start=hasStart?Number(s.fuelStartBars):null;
+  const end=hasEnd?Number(s.fuelEndBars):null;
+  const adj=hasStart&&hasEnd?(start-end)*90:null;
+  return `<div class="card p-2 mb-3">
+    <h4 class="font-black text-xs text-amber-400 mb-2">⛽ البنزين</h4>
+    <div class="grid grid-cols-2 gap-2 text-[11px]">
+      <div class="fuel-read">بداية الوردية<br>${hasStart?`<b>${start}/10 شرطات</b>${fuelBarsHtml(start)}<div class="small mt-1">${money(start*90)}</div>`:`<span class="small">لم تُقرأ الصورة</span>`}</div>
+      <div class="fuel-read">نهاية الوردية<br>${hasEnd?`<b>${end}/10 شرطات</b>${fuelBarsHtml(end)}<div class="small mt-1">${money(end*90)}</div>`:`<span class="small">لم تُسجل بعد</span>`}</div>
+    </div>
+    ${adj!==null?`<div class="mt-2 text-xs">تسوية البنزين: <b class="${adj>0?"bad":adj<0?"good":"text-white"}">${adj>0?"خصم ":"إضافة "}${money(Math.abs(adj))}</b></div>`:""}
+    <div class="small mt-1">10 شرطات = 900 ج.م، والشرطة الواحدة = 90 ج.م.</div>
+    ${s.fuelStartPhoto?`<a href="${esc(s.fuelStartPhoto)}" target="_blank"><img src="${esc(s.fuelStartPhoto)}" class="fuel-preview mt-2" alt="صورة بنزين بداية الوردية"></a>`:""}
+    ${s.fuelEndPhoto?`<a href="${esc(s.fuelEndPhoto)}" target="_blank"><img src="${esc(s.fuelEndPhoto)}" class="fuel-preview mt-2" alt="صورة بنزين نهاية الوردية"></a>`:""}
+  </div>`;
+}
+
+function partyTreasuryAdjustment(type,id){
+  return vals(state.data.treasury).filter(x=>
+    x.affectsPartyBalance===true &&
+    x.partyType===type &&
+    x.partyId===id
+  ).reduce((a,x)=>a+(Number(x.amount)||0),0);
 }
 
 function driverBalance(id){
   const d=state.data.drivers[id]||{};
   const opening=Number(d.openingBalance??d.initBalance)||0;
   let earned=0,paid=0,adv=0,advPaid=0;
-  vals(state.data.shifts).filter(s=>s.driverId===id).forEach(s=>{
+
+  // لا تدخل الوردية في حساب السائق إلا بعد إنهائها.
+  vals(state.data.shifts).filter(s=>s.driverId===id&&s.status==="منتهية").forEach(s=>{
     const c=shiftCalc(s);
-    earned+=Math.max(0,Number(s.driverDue??(c.revenue-c.pct-c.personal))||0);
+    earned+=Number(s.driverDue??c.driverDue)||0;
     paid+=Number(s.paidNow)||0;
   });
+
   vals(state.data.advances).filter(a=>a.partyType==="driver"&&a.partyId===id).forEach(a=>{
-    adv+=Number(a.amount)||0;advPaid+=Number(a.paid)||0;
+    adv+=Number(a.amount)||0;
+    advPaid+=Number(a.paid)||0;
   });
-  return {opening,earned,paid,advOutstanding:adv-advPaid,balance:opening+earned-paid-adv+advPaid};
+
+  const treasuryAdjust=partyTreasuryAdjustment("driver",id);
+  return {
+    opening,earned,paid,treasuryAdjust,
+    advOutstanding:adv-advPaid,
+    balance:opening+earned-paid+treasuryAdjust-adv+advPaid
+  };
 }
 
 function carBalance(id){
   const c=state.data.cars[id]||{};
   const opening=Number(c.openingBalance??c.initBalance)||0;
+
+  // صافي كل وردية منتهية تخص السيارة يدخل مباشرة في حساب السيارة.
+  const shiftNet=vals(state.data.shifts)
+    .filter(s=>s.carId===id&&s.status==="منتهية")
+    .reduce((a,s)=>a+(Number(s.net??shiftCalc(s).net)||0),0);
+
   let due=0,paid=0,adv=0,advPaid=0;
   vals(state.data.rentPayments).filter(x=>x.carId===id).forEach(x=>{
-    due+=Number(x.dueAmount)||0;paid+=Number(x.amount)||0;
+    due+=Number(x.dueAmount)||0;
+    paid+=Number(x.amount)||0;
   });
+
   vals(state.data.advances).filter(a=>a.partyType==="car"&&a.partyId===id).forEach(a=>{
-    adv+=Number(a.amount)||0;advPaid+=Number(a.paid)||0;
+    adv+=Number(a.amount)||0;
+    advPaid+=Number(a.paid)||0;
   });
-  return {opening,rentDue:due,rentPaid:paid,advOutstanding:adv-advPaid,balance:opening+due-paid-adv+advPaid};
+
+  // مصروفات الخزنة المربوطة بالسيارة تخصم من حسابها.
+  const treasuryAdjust=partyTreasuryAdjustment("car",id);
+
+  return {
+    opening,shiftNet,rentDue:due,rentPaid:paid,treasuryAdjust,
+    advOutstanding:adv-advPaid,
+    balance:opening+shiftNet+due-paid+treasuryAdjust-adv+advPaid
+  };
 }
 
-async function treasuryRecord(amount,description,type){
+async function treasuryRecord(amount,description,type,partyType="",partyId="",affectsPartyBalance=false,extra={}){
   if(!cloudReady)return;
   const r=push(ref(db,"treasury"));
-  await set(r,{id:r.key,amount:Number(amount)||0,description,type,createdAt:Date.now()});
+  await set(r,{
+    id:r.key,
+    amount:Number(amount)||0,
+    description,
+    type,
+    createdAt:Date.now(),
+    ...(partyType?{partyType}:{}),
+    ...(partyId?{partyId}:{}),
+    ...(affectsPartyBalance?{affectsPartyBalance:true}:{}),
+    ...extra
+  });
 }
 
 function dashboard(){
@@ -270,7 +391,7 @@ function dashboard(){
     <div class="kpi bg-slate-900 border border-slate-800">الإيرادات<br><b class="text-lg sm:text-xl mt-1 block">${money(rev)}</b></div>
     <div class="kpi bg-red-950/60 border border-red-900/40">المصاريف<br><b class="text-lg sm:text-xl mt-1 block">${money(ex)}</b></div>
     <div class="kpi bg-amber-950/60 border border-amber-900/40">نسب السائقين<br><b class="text-lg sm:text-xl mt-1 block">${money(pct)}</b></div>
-    <div class="kpi bg-emerald-950/60 border border-emerald-900/40">الصافي<br><b class="text-lg sm:text-xl mt-1 block">${money(rev-ex-pct)}</b></div>
+    <div class="kpi bg-emerald-950/60 border border-emerald-900/40">الصافي<br><b class="text-lg sm:text-xl mt-1 block">${money(ss.reduce((a,s)=>a+shiftCalc(s).net,0))}</b></div>
   </div>`;
 }
 
@@ -285,9 +406,9 @@ function drivers(){
       <div class="small mt-0.5">${esc(d.phone||"")}</div>
       <div class="grid grid-cols-2 gap-2 mt-2 text-[11px]">
         <span>الرصيد الافتتاحي<br><b class="text-white">${money(b.opening)}</b></span>
-        <span>المستحق<br><b class="text-white">${money(Math.max(0,b.balance))}</b></span>
+        <span>الرصيد الحالي<br><b class="${b.balance>=0?"good":"bad"}">${money(Math.abs(b.balance))} ${b.balance>=0?"له":"عليه"}</b></span>
         <span>السلف المتبقية<br><b class="text-white">${money(b.advOutstanding)}</b></span>
-        <span>النسبة<br><b class="text-white">${Number(d.percent||0)}%</b></span>
+        <span>نسبة الوردية<br><b class="text-white">${Number(d.percent||0)}%</b></span>
       </div>
       <div class="flex flex-wrap gap-1 mt-2.5">
         <button class="btn btn-green text-[10px] py-1 px-2" data-action="driverPay" data-id="${d.id}">💵 سداد</button>
@@ -334,6 +455,8 @@ function cars(){
       <div class="small mt-0.5">الحالة: ${esc(c.status||"ملك")} ${c.status==="إيجار"?`<br>المالك: ${esc(c.ownerName||"")} (${esc(c.ownerPhone||"")})<br>الإيجار: ${money(c.rentMonthly)} - يوم السداد: ${esc(c.rentDate||"")}`:""}</div>
       <div class="grid grid-cols-2 gap-2 mt-2 text-[11px]">
         <span>الرصيد الافتتاحي<br><b class="text-white">${money(b.opening)}</b></span>
+        <span>صافي الورديات<br><b class="${b.shiftNet>=0?"good":"bad"}">${money(Math.abs(b.shiftNet))} ${b.shiftNet>=0?"إضافة":"خصم"}</b></span>
+        <span>مصروفات الخزنة<br><b class="${b.treasuryAdjust>=0?"good":"bad"}">${money(Math.abs(b.treasuryAdjust))} ${b.treasuryAdjust>=0?"إضافة":"خصم"}</b></span>
         <span>${c.status==="إيجار"?"الإيجار المستحق":"مستحقات أخرى"}<br><b class="text-white">${money(b.rentDue)}</b></span>
         <span>المدفوع<br><b class="text-white">${money(b.rentPaid)}</b></span>
         <span>السلف المتبقية<br><b class="text-white">${money(b.advOutstanding)}</b></span>
@@ -414,7 +537,7 @@ function payForm(title,type,id){
       if(type==="driver"){
         const d=state.data.drivers[id],r=push(ref(db,"payments"));
         await set(r,{id:r.key,partyType:"driver",partyId:id,amount,method:val("payMethod"),createdAt:Date.now()});
-        await treasuryRecord(-amount,"سداد للسائق: "+(d?.name||""),"سداد سائق");
+        await treasuryRecord(-amount,"سداد للسائق: "+(d?.name||""),"سداد سائق","driver",id,false);
         const shifts=vals(state.data.shifts).filter(s=>s.driverId===id).sort((a,b)=>(a.openedAt||0)-(b.openedAt||0));
         let left=amount;
         for(const s of shifts){
@@ -427,7 +550,7 @@ function payForm(title,type,id){
       }else{
         const c=state.data.cars[id],r=push(ref(db,"rentPayments"));
         await set(r,{id:r.key,carId:id,amount,dueAmount:0,method:val("payMethod"),createdAt:Date.now()});
-        await treasuryRecord(-amount,"سداد سيارة: "+(c?.brand||""),"سداد سيارة");
+        await treasuryRecord(-amount,"سداد سيارة: "+(c?.brand||""),"سداد سيارة","car",id,false);
       }
       closeModal();toast("تم السداد وتسجيله في الخزنة");render();
     }catch(e){toast("تعذر تسجيل السداد: "+e.message,true)}
@@ -465,8 +588,14 @@ function details(type,id){
   <div class="grid md:grid-cols-2 gap-2 text-[11px]">
     <div class="card p-2.5">الرصيد الافتتاحي<br><b class="text-white">${money(b.opening)}</b></div>
     <div class="card p-2.5">الرصيد الحالي<br><b class="${b.balance>=0?"good":"bad"} text-xs">${money(Math.abs(b.balance))} ${b.balance>=0?"له":"عليه"}</b></div>
-    ${type==="driver"?`<div class="card p-2.5">المستحق من الورديات<br><b class="text-white">${money(b.earned)}</b></div><div class="card p-2.5">السداد<br><b class="text-white">${money(b.paid)}</b></div>`:
-    `<div class="card p-2.5">الإيجار/المستحق<br><b class="text-white">${money(b.rentDue)}</b></div><div class="card p-2.5">المدفوع<br><b class="text-white">${money(b.rentPaid)}</b></div>`}
+    ${type==="driver"?`
+      <div class="card p-2.5">مستحقات الورديات المنتهية<br><b class="${b.earned>=0?"good":"bad"}">${money(Math.abs(b.earned))} ${b.earned>=0?"له":"عليه"}</b></div>
+      <div class="card p-2.5">المبلغ المدفوع الآن<br><b class="bad">${money(b.paid)}</b></div>
+      <div class="card p-2.5">مصروفات الخزنة على السائق<br><b class="${b.treasuryAdjust>=0?"good":"bad"}">${money(Math.abs(b.treasuryAdjust))} ${b.treasuryAdjust>=0?"إضافة":"خصم"}</b></div>`:
+    `<div class="card p-2.5">صافي الورديات المنتهية<br><b class="${b.shiftNet>=0?"good":"bad"}">${money(Math.abs(b.shiftNet))} ${b.shiftNet>=0?"إضافة":"خصم"}</b></div>
+      <div class="card p-2.5">مصروفات الخزنة على السيارة<br><b class="${b.treasuryAdjust>=0?"good":"bad"}">${money(Math.abs(b.treasuryAdjust))} ${b.treasuryAdjust>=0?"إضافة":"خصم"}</b></div>
+      <div class="card p-2.5">الإيجار/المستحق<br><b class="text-white">${money(b.rentDue)}</b></div>
+      <div class="card p-2.5">المدفوع<br><b class="text-white">${money(b.rentPaid)}</b></div>`}
     <div class="card p-2.5 md:col-span-2">السلف المتبقية<br><b class="text-white">${money(b.advOutstanding)}</b></div>
   </div>
   <button class="btn btn-gray text-xs mt-3" onclick="closeModal()">إغلاق</button>`);
@@ -568,25 +697,105 @@ function customerForm(id){
 }
 function customerDetails(id){const c=state.data.customers[id];if(c)openModal(`<h3 class="text-lg font-black text-white">${esc(c.name)}</h3><p class="small mt-1">${esc(c.phone||"")}</p><button class="btn btn-gray text-xs mt-3" onclick="closeModal()">إغلاق</button>`)}
 
-function shifts(){
-  const arr=vals(state.data.shifts).sort((a,b)=>(b.openedAt||0)-(a.openedAt||0));
-  return layout("الورديات","فتح وإغلاق الورديات")+
-  `<button class="btn btn-primary mb-2 text-xs" data-action="newShift">+ وردية جديدة</button>
-  <div class="card p-1.5 tablewrap"><table class="table text-[11px]"><thead><tr><th>الوردية</th><th>السائق</th><th>السيارة</th><th>الحالة</th><th>الإيراد</th><th></th></tr></thead><tbody>
-  ${arr.map(s=>{const c=shiftCalc(s);return `<tr><td>${esc(s.shiftNo||s.id)}</td><td>${esc(s.driverName||"")}</td><td>${esc(s.carName||"")}</td><td><span class="badge ${s.status==="مفتوحة"?"open":"closed"}">${esc(s.status||"")}</span></td><td>${money(c.revenue)}</td><td><button class="btn btn-gray text-[10px] py-1 px-1.5" data-action="shiftDetails" data-id="${s.id}">التفاصيل</button></td></tr>`}).join("")}</tbody></table></div>`;
+const GEMINI_KEY_STORAGE="goldenFleetGeminiKey";
+const GEMINI_MODEL="gemini-3.7-flash";
+function getGeminiKey(){return localStorage.getItem(GEMINI_KEY_STORAGE)||"";}
+function setGeminiKey(k){k=k.trim();k?localStorage.setItem(GEMINI_KEY_STORAGE,k):localStorage.removeItem(GEMINI_KEY_STORAGE);}
+function fileToDataUrl(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=reject;r.readAsDataURL(file);});}
+async function uploadShiftFuelPhoto(file,shiftId,side){
+  const r=sRef(storage,`shifts/${shiftId}/fuel_${side}_${Date.now()}.jpg`);
+  await uploadBytes(r,file,{contentType:file.type||"image/jpeg"});
+  return await getDownloadURL(r);
 }
-
+async function readFuelBarsFromImage(file){
+  const key=getGeminiKey();
+  if(!key)throw new Error("أدخل مفتاح Gemini من زر إعداد القراءة أولاً.");
+  const dataUrl=await fileToDataUrl(file);
+  const base64=dataUrl.split(",")[1], mime=file.type||"image/jpeg";
+  const prompt=`أنت محلل عداد بنزين. الصورة لعداد به 10 شرطات كحد أقصى. اقرأ فقط عدد الشرطات المضيئة أو الممتلئة فعلياً من 0 إلى 10. لا تخمّن. إذا كانت الصورة غير واضحة أو العداد غير ظاهر جيداً اجعل confidence أقل من 0.70. أعد JSON فقط: {"bars":0,"confidence":0.0}`;
+  const endpoint=`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
+  const body={contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:base64}}]}],generationConfig:{temperature:0,responseMimeType:"application/json"}};
+  const res=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!res.ok)throw new Error("فشل تحليل الصورة من Gemini: HTTP "+res.status);
+  const j=await res.json();
+  const raw=j?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
+  let p; try{p=JSON.parse(raw)}catch{const m=raw.match(/\{[\s\S]*\}/);if(!m)throw new Error("تعذر قراءة نتيجة تحليل العداد.");p=JSON.parse(m[0]);}
+  const bars=Number(p.bars), confidence=Number(p.confidence);
+  if(!Number.isFinite(bars)||bars<0||bars>10)throw new Error("نتيجة عدد الشرطات غير صالحة.");
+  if(!Number.isFinite(confidence)||confidence<0.70)throw new Error("الصورة غير واضحة. أعد تصوير العداد من الأمام وبوضوح.");
+  return {bars:Math.round(bars),confidence};
+}
+function fuelSettings(){
+  openModal(`<h3 class="text-base font-black text-white mb-2">⚙️ إعداد القراءة التلقائية للبنزين</h3>
+  <p class="small mb-3">مفتاح Gemini مطلوب لقراءة العداد تلقائياً. المفتاح يُحفظ على هذا الجهاز فقط. للأمان الأفضل لاحقاً ننقل المفتاح إلى Firebase Cloud Function.</p>
+  <label class="label">Gemini API Key</label><input id="geminiKey" class="field" type="password" value="${esc(getGeminiKey())}" placeholder="ضع مفتاح Gemini هنا">
+  <div class="small mt-2">10 شرطات = 900 ج.م، الشرطة = 90 ج.م.</div>
+  <div class="flex gap-2 mt-3"><button id="saveGeminiKey" class="btn btn-primary text-xs">حفظ المفتاح</button><button class="btn btn-gray text-xs" onclick="closeModal()">إغلاق</button></div>`);
+  document.getElementById("saveGeminiKey").onclick=()=>{setGeminiKey(val("geminiKey"));closeModal();toast(getGeminiKey()?"تم حفظ مفتاح القراءة":"تم حذف مفتاح القراءة");};
+}
+window.fuelSettings=fuelSettings;
+function shifts(){
+  const arr=vals(state.data.shifts).sort((a,b)=>(b.openedAt||b.startedAt||0)-(a.openedAt||a.startedAt||0));
+  return layout("الورديات","الصور المرفوعة من السائق للمصاريف تظل محفوظة بعد إنهاء الوردية")+
+  `<button class="btn btn-primary mb-2 text-xs" data-action="newShift">+ وردية جديدة</button>
+  <div class="card p-1.5 tablewrap"><table class="table text-[11px]"><thead><tr>
+    <th>الوردية</th><th>السائق</th><th>السيارة</th><th>الحالة</th><th>الإيراد</th><th>الصافي</th><th>مصروفات/صور</th><th>الإجراءات</th>
+  </tr></thead><tbody>
+  ${arr.map(s=>{
+    const c=shiftCalc(s);
+    const ex=c.ex||[];
+    const photoCount=ex.filter(e=>!!expenseImage(e)).length;
+    return `<tr>
+      <td>${esc(s.shiftNo||s.id)}</td>
+      <td>${esc(s.driverName||"")}</td>
+      <td>${esc(s.carName||"")}</td>
+      <td><span class="badge ${s.status==="مفتوحة"?"open":"closed"}">${esc(s.status||"")}</span></td>
+      <td>${money(c.revenue)}</td>
+      <td class="${c.net>=0?"good":"bad"}">${money(c.net)}</td>
+      <td>
+        <button class="btn btn-gray text-[10px] py-1 px-1.5" data-action="shiftDetails" data-id="${s.id}">
+          💸 ${ex.length} مصروف ${photoCount?`📷 ${photoCount}`:""}
+        </button>
+      </td>
+      <td><div class="flex gap-1">
+        <button class="btn btn-gray text-[10px] py-1 px-1.5" data-action="shiftDetails" data-id="${s.id}">التفاصيل</button>
+        <button class="btn btn-red text-[10px] py-1 px-1.5" data-action="deleteShift" data-id="${s.id}">🗑️ حذف</button>
+      </div></td>
+    </tr>`;
+  }).join("")}</tbody></table></div>`;
+}
 function shiftForm(){
   const ds=vals(state.data.drivers),cs=vals(state.data.cars);
   if(!ds.length||!cs.length)return toast("أضف سائقاً وسيارة أولاً",true);
-  openModal(`<h3 class="text-base font-black mb-2.5 text-white">فتح وردية</h3><div class="grid md:grid-cols-2 gap-2"><select id="sDriver" class="field">${ds.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join("")}</select><select id="sCar" class="field">${cs.map(c=>`<option value="${c.id}">${esc(c.brand||c.name||"")} ${esc(c.model||"")}</option>`).join("")}</select></div><div class="flex gap-2 mt-3"><button id="saveShift" class="btn btn-primary text-xs">فتح الوردية</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
+  openModal(`<h3 class="text-base font-black mb-2.5 text-white">فتح وردية</h3>
+  <div class="grid md:grid-cols-2 gap-2">
+    <div><label class="label">السائق</label><select id="sDriver" class="field">${ds.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join("")}</select></div>
+    <div><label class="label">السيارة</label><select id="sCar" class="field">${cs.map(c=>`<option value="${c.id}">${esc(c.brand||c.name||"")} ${esc(c.model||"")}</option>`).join("")}</select></div>
+    <div><label class="label">العُهدة المستلمة</label><input id="sCustody" class="field" type="number" min="0" step="0.01" value="0" placeholder="مثلاً 500"></div>
+  </div>
+  <div class="card p-2 mt-3"><div class="flex items-center justify-between gap-2"><div><b class="text-xs text-amber-400">⛽ استلام البنزين</b><div class="small">صوّر العداد وسيقرأ التطبيق عدد الشرطات تلقائياً.</div></div><button id="startFuelBtn" class="btn btn-green text-xs">📷 تصوير العداد</button></div><div id="startFuelResult" class="small mt-2">لم يتم تصوير العداد بعد.</div></div>
+  <div class="flex gap-2 mt-3"><button id="saveShift" class="btn btn-primary text-xs">فتح الوردية</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button><button class="btn btn-dark text-xs" onclick="fuelSettings()">⚙️ إعداد القراءة</button></div>`);
+  let openingFuel={bars:null,photo:""};
+  document.getElementById("startFuelBtn").onclick=async()=>{
+    const input=document.createElement("input"); input.type="file"; input.accept="image/*"; input.capture="environment"; input.style.display="none"; document.body.appendChild(input);
+    input.onchange=async()=>{const file=input.files?.[0];input.remove();if(!file)return;try{
+      toast("⏳ جاري قراءة عداد البنزين...");
+      const result=await readFuelBarsFromImage(file);
+      const tempRef=push(ref(db,"shifts")); const photo=await uploadShiftFuelPhoto(file,tempRef.key,"start"); await remove(tempRef);
+      openingFuel={bars:result.bars,photo};
+      document.getElementById("startFuelResult").innerHTML=`<b class="text-emerald-400">${result.bars}/10 شرطات</b> — ${money(result.bars*90)}<br>${fuelBarsHtml(result.bars)}`;
+      toast("تمت قراءة عداد البنزين بنجاح");
+    }catch(e){console.error(e);toast(e.message||"تعذر قراءة العداد",true);}};
+    input.click();
+  };
   document.getElementById("saveShift").onclick=async()=>{
     const d=state.data.drivers[val("sDriver")],c=state.data.cars[val("sCar")];
     if(!d||!c)return toast("بيانات غير صحيحة",true);
     if(vals(state.data.shifts).some(s=>s.driverId===d.id&&s.status==="مفتوحة"))return toast("السائق لديه وردية مفتوحة",true);
+    if(!Number.isFinite(Number(openingFuel.bars)))return toast("صوّر عداد البنزين أولاً",true);
     const r=push(ref(db,"shifts"));
-    await set(r,{id:r.key,shiftNo:"WR-"+Date.now(),driverId:d.id,driverName:d.name,driverPercent:Number(d.percent)||0,carId:c.id,carName:(c.brand||c.name||"")+" "+(c.model||""),status:"مفتوحة",openedAt:Date.now(),createdAt:Date.now()});
-    closeModal();toast("تم فتح الوردية");render();
+    await set(r,{id:r.key,shiftNo:"WR-"+Date.now(),driverId:d.id,driverName:d.name,driverPercent:Number(d.percent)||0,carId:c.id,carName:(c.brand||c.name||"")+" "+(c.model||""),status:"مفتوحة",openedAt:Date.now(),createdAt:Date.now(),custody:Math.max(0,num("sCustody")),fuelStartBars:Number(openingFuel.bars),fuelStartValue:Number(openingFuel.bars)*90,fuelStartPhoto:openingFuel.photo,fuelEndBars:null,fuelEndValue:null,fuelAdjustment:0});
+    closeModal();toast("تم فتح الوردية وتسجيل العُهدة والبنزين");render();
   };
 }
 
@@ -601,270 +810,13 @@ function shiftDetails(id){
   <div class="grid grid-cols-2 gap-2 text-[11px] mb-3">
     <div class="card p-2">إجمالي الإيرادات<br><b class="text-white text-xs">${money(c.revenue)}</b></div>
     <div class="card p-2">إجمالي المصاريف<br><b class="text-white text-xs">${money(c.expenses)}</b></div>
-    <div class="card p-2">نسبة السائق (${s.driverPercent}%)<br><b class="text-white text-xs">${money(c.pct)}</b></div>
-    <div class="card p-2">صافي الوردية<br><b class="text-emerald-400 text-xs">${money(c.net)}</b></div>
+    <div class="card p-2">نسبة السائق (${s.driverPercent}%) بعد المصاريف<br><b class="text-white text-xs">${money(c.pct)}</b></div>
+    <div class="card p-2">مصروف السائق الشخصي<br><b class="text-white text-xs">${money(c.personal)}</b></div>
+    <div class="card p-2">المستحق الفعلي للسائق<br><b class="${c.driverDue>=0?"good":"bad"} text-xs">${money(Math.abs(c.driverDue))} ${c.driverDue>=0?"له":"عليه"}</b></div>
+    <div class="card p-2">صافي الوردية للسيارة والخزنة<br><b class="${c.net>=0?"good":"bad"} text-xs">${money(Math.abs(c.net))} ${c.net>=0?"إضافة":"خصم"}</b></div>
   </div>
 
+  <div class="card p-2 mb-3"><h4 class="font-bold text-amber-400 text-xs mb-1.5">💰 العُهدة</h4><div class="text-xs"><b>${money(c.custody)}</b> — تضاف تلقائياً إلى صافي الوردية.</div></div>
+  ${fuelInfoHtml(s)}
   <div class="card p-2 mb-3">
-    <h4 class="font-bold text-amber-400 text-xs mb-1.5">🚗 قائمة الرحلات (${c.trips.length})</h4>
-    ${c.trips.length>0?`<div class="tablewrap"><table class="table text-[10px]"><thead><tr><th>الوقت</th><th>المبلغ</th></tr></thead><tbody>
-    ${c.trips.map(t=>`<tr><td>${dateTime(t.createdAt)}</td><td>${money(t.amount)}</td></tr>`).join("")}
-    </tbody></table></div>`:`<p class='small'>لا توجد رحلات مسجلة في هذه الوردية.</p>`}
-  </div>
-
-  <div class="card p-2 mb-3">
-    <h4 class="font-bold text-red-400 text-xs mb-1.5">💸 قائمة المصاريف (${c.ex.length})</h4>
-    ${c.ex.length>0?`<div class="space-y-2">
-    ${c.ex.map(e=>`<div class="flex items-center justify-between p-1.5 rounded bg-slate-950 border border-slate-800 text-[11px]">
-      <div>
-        <b>${esc(e.type)}</b>: <span class="text-white">${money(e.amount)}</span>
-        ${e.note?`<div class="small text-[10px]">ملاحظة: ${esc(e.note)}</div>`:""}
-      </div>
-      ${e.imageUrl?`<a href="${esc(e.imageUrl)}" target="_blank"><img src="${esc(e.imageUrl)}" class="w-10 h-10 object-cover rounded border border-slate-700" alt="صورة المصروف"></a>`:`<span class="small text-[10px]">بدون صورة</span>`}
-    </div>`).join("")}
-    </div>`:`<p class='small'>لا توجد مصاريف مسجلة في هذه الوردية.</p>`}
-  </div>
-
-  <div class="flex flex-wrap gap-1.5 mt-3">
-    ${isOpen?`<button class="btn btn-primary text-[11px] py-1 px-2" data-action="addTrip" data-id="${id}">+ رحلة</button>
-              <button class="btn btn-red text-[11px] py-1 px-2" data-action="addExpense" data-id="${id}">+ مصروف</button>
-              <button class="btn btn-dark text-[11px] py-1 px-2 border border-slate-700" data-action="closeShift" data-id="${id}">🔒 إنهاء الوردية</button>`:""}
-    <button class="btn btn-gray text-[11px] py-1 px-2" onclick="closeModal()">إغلاق</button>
-  </div>`);
-  bindView();
-}
-
-function closeShift(id){
-  const s=state.data.shifts[id];if(!s||s.status!=="مفتوحة")return;
-  const c=shiftCalc(s);
-  openModal(`<h3 class="text-base font-black text-white">🔒 إنهاء الوردية</h3><p class="mt-2 text-xs">الإيراد: <b class="text-white">${money(c.revenue)}</b></p><p class="text-xs">الصافي: <b class="text-white">${money(c.net)}</b></p><div class="flex gap-2 mt-3"><button id="confirmClose" class="btn btn-dark text-xs border border-slate-700">تأكيد الإغلاق</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
-  document.getElementById("confirmClose").onclick=async()=>{
-    await update(ref(db,"shifts/"+id),{status:"منتهية",closedAt:Date.now(),revenue:c.revenue,expenses:c.expenses,net:c.net,driverDue:Math.max(0,c.revenue-c.pct-c.personal)});
-    closeModal();toast("تم إغلاق الوردية");render();
-  };
-}
-
-function tripForm(shiftId){
-  openModal(`<h3 class="text-base font-black mb-2.5 text-white">إضافة رحلة</h3><input id="tAmount" class="field" type="number" placeholder="المبلغ"><div class="flex gap-2 mt-3"><button id="saveTrip" class="btn btn-primary text-xs">حفظ</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
-  document.getElementById("saveTrip").onclick=async()=>{
-    if(num("tAmount")<=0)return toast("أدخل المبلغ",true);
-    await set(push(ref(db,"trips")),{shiftId,amount:num("tAmount"),status:"نشطة",createdAt:Date.now()});
-    closeModal();toast("تم حفظ الرحلة");shiftDetails(shiftId);
-  };
-}
-
-function expenseForm(shiftId){
-  openModal(`<h3 class="text-base font-black mb-2.5 text-white">تسجيل مصروف</h3>
-  <div class="grid gap-2">
-    <select id="eType" class="field"><option>بنزين</option><option>صيانة</option><option>مصروف شخصي للسائق</option><option>أخرى</option></select>
-    <input id="eAmount" class="field" type="number" placeholder="المبلغ">
-    <input id="eNote" class="field" placeholder="ملاحظة">
-    <div>
-      <label class="label">صورة إيصال المصروف (اختياري)</label>
-      <input id="eImage" class="field text-[11px]" type="file" accept="image/*">
-    </div>
-  </div>
-  <div class="flex gap-2 mt-3"><button id="saveExpense" class="btn btn-red text-xs">حفظ المصروف</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
-
-  document.getElementById("saveExpense").onclick=async()=>{
-    const amount=num("eAmount");
-    if(amount<=0)return toast("أدخل المبلغ",true);
-    toast("جاري حفظ المصروف...",false);
-
-    let imageUrl="";
-    const fileInput=document.getElementById("eImage");
-    if(fileInput.files[0]){
-      try{
-        const file=fileInput.files[0];
-        const sRefPath=sRef(storage, "expenses/"+Date.now()+"_"+file.name);
-        const snapshot=await uploadBytes(sRefPath, file);
-        imageUrl=await getDownloadURL(snapshot.ref);
-      }catch(err){
-        console.error(err);
-        toast("فشل رفع الصورة، سيتم حفظ المصروف بدونها",true);
-      }
-    }
-
-    await set(push(ref(db,"expenses")),{
-      shiftId,
-      amount,
-      type:val("eType"),
-      note:val("eNote"),
-      imageUrl,
-      createdAt:Date.now()
-    });
-    closeModal();
-    toast("تم حفظ المصروف بنجاح");
-    shiftDetails(shiftId);
-  };
-}
-
-function treasury(){
-  const init=Number(state.data.settings?.vaultInitBalance)||0;
-  const tx=vals(state.data.treasury).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  const total=tx.reduce((a,x)=>a+(Number(x.amount)||0),0);
-  return layout("الخزنة","حركات الخزنة والسيولة")+
-  `<div class="grid grid-cols-2 gap-2 mb-2">
-    <div class="kpi bg-slate-900 border border-slate-800 col-span-2">الرصيد الحالي<b class="text-xl sm:text-2xl block mt-1 text-white">${money(init+total)}</b></div>
-    <button data-action="treasuryIn" class="btn btn-green h-12 text-xs">＋ دخل</button>
-    <button data-action="treasuryOut" class="btn btn-red h-12 text-xs">－ خرج</button>
-  </div>
-  <div class="card p-2.5 mb-2"><h3 class="font-black text-xs text-white mb-1.5">الرصيد الافتتاحي</h3><div class="flex gap-2"><input id="vaultInitInput" class="field text-xs" type="number" value="${init}"><button id="saveVaultInit" class="btn btn-primary text-xs">حفظ</button></div></div>
-  <div class="card p-1.5 tablewrap"><table class="table text-[11px]"><thead><tr><th>التاريخ</th><th>البيان</th><th>النوع</th><th>المبلغ</th></tr></thead><tbody>${tx.map(x=>`<tr><td>${dateTime(x.createdAt)}</td><td>${esc(x.description||"")}</td><td>${esc(x.type||"")}</td><td>${money(x.amount)}</td></tr>`).join("")}</tbody></table></div>`;
-}
-
-function treasuryForm(type){
-  openModal(`<h3 class="text-base font-black mb-2.5 text-white">${type}</h3><input id="trAmount" class="field" type="number" placeholder="المبلغ"><input id="trDesc" class="field mt-2" placeholder="البيان"><div class="flex gap-2 mt-3"><button id="saveTreasury" class="btn btn-primary text-xs">حفظ</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
-  document.getElementById("saveTreasury").onclick=async()=>{if(num("trAmount")<=0)return toast("أدخل مبلغ صحيح",true);await treasuryRecord(type==="دخل"?num("trAmount"):-num("trAmount"),val("trDesc"),type+" - حركة");closeModal();toast("تم الحفظ");render()};
-}
-
-function monthlyObligations(){
-  const debts=vals(state.data.debts);
-  const carRent=vals(state.data.cars).filter(c=>c.status==="إيجار").reduce((a,c)=>a+(Number(c.rentMonthly)||0),0);
-  const houseRent=debts.filter(d=>d.type==="إيجار بيت").reduce((a,d)=>a+(Number(d.monthlyPayment||d.amount)||0),0);
-  const debtMonthly=debts.filter(d=>d.type!=="إيجار بيت"&&d.type!=="سلفة").reduce((a,d)=>a+(Number(d.monthlyPayment)||0),0);
-  const driverDue=vals(state.data.drivers).reduce((a,d)=>a+Math.max(0,driverBalance(d.id).balance),0);
-  return {carRent,houseRent,debtMonthly,driverDue,total:carRent+houseRent+debtMonthly+driverDue};
-}
-
-function debtsView(){
-  const ds=vals(state.data.debts);
-  const total=ds.filter(d=>d.type!=="سلفة"&&d.type!=="الجمعية").reduce((a,d)=>a+(Number(d.amount)||0),0);
-  const ob=monthlyObligations();
-  return layout("الديون والالتزامات","السداد والسلف والفوائد")+
-  `<div class="grid md:grid-cols-2 gap-2 mb-2">
-    <div class="kpi bg-slate-900 border border-slate-800">إجمالي الدين المتبقي<b class="text-lg sm:text-xl block mt-1 text-white">${money(total)}</b></div>
-    <div class="kpi bg-amber-950/60 border border-amber-900/40">المطلوب هذا الشهر<b class="text-lg sm:text-xl block mt-1 text-white">${money(ob.total)}</b></div>
-  </div>
-  <button class="btn btn-primary mb-2 text-xs" data-action="newDebt">+ إضافة دين / التزام</button>
-  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-2">${ds.map(d=>`<div class="card p-2.5">
-    <b class="text-white text-xs">${esc(d.name)}</b><div class="small mt-0.5">${esc(d.type)} ${d.dueDate?`• سداد: ${d.dueDate}`:""}</div>
-    <div class="mt-1.5 text-[11px]">المتبقي: <b class="text-white">${money(d.amount)}</b></div>
-    ${d.type==="دين بفائدة شهرية"||d.dueDate?`<div class="small mt-0.5">القسط/الفائدة: ${money(d.monthlyPayment)}</div>`:""}
-    <div class="flex flex-wrap gap-1 mt-2.5">
-      <button class="btn btn-green text-[10px] py-1 px-1.5" data-action="debtPay" data-id="${d.id}">سداد</button>
-      ${d.type==="دين بفائدة شهرية"?`<button class="btn btn-primary text-[10px] py-1 px-1.5" data-action="interestPay" data-id="${d.id}">فائدة</button>`:""}
-      <button class="btn btn-dark text-[10px] py-1 px-1.5" data-action="debtAdvance" data-id="${d.id}">＋ سلفة</button>
-      <button class="btn btn-gray text-[10px] py-1 px-1.5" data-action="debtDetails" data-id="${d.id}">تفاصيل</button>
-      <button class="btn btn-red text-[10px] py-1 px-1.5" data-action="deleteDebt" data-id="${d.id}">حذف</button>
-    </div>
-  </div>`).join("")||"<p class='small'>لا توجد ديون.</p>"}</div>`;
-}
-
-function debtForm(){
-  openModal(`<h3 class="text-base font-black mb-2.5 text-white">إضافة دين / التزام</h3>
-  <div class="grid gap-2">
-    <div><label class="label">اسم الدائن</label><input id="dn" class="field"></div>
-    <div>
-      <label class="label">النوع</label>
-      <select id="dt" class="field" onchange="document.getElementById('debtExtra').classList.toggle('hidden',this.value!=='سلفة')">
-        <option>دين ثابت</option><option>دين بفائدة شهرية</option><option>الجمعية</option><option>إيجار بيت</option><option>أخرى</option><option>سلفة</option>
-      </select>
-    </div>
-    <div id="debtExtra" class="hidden grid md:grid-cols-2 gap-2">
-      <select id="loanDir" class="field"><option value="له">له</option><option value="عليه">عليه</option></select>
-      <select id="loanSource" class="field"><option value="رأس المال">سلفة من رأس المال</option><option value="الفائدة الشهرية">سلفة من الفائدة الشهرية</option></select>
-    </div>
-    <div><label class="label">المبلغ الأساسي</label><input id="da" class="field" type="number"></div>
-    <div><label class="label">القسط / الفائدة الشهرية</label><input id="dm" class="field" type="number"></div>
-    <div><label class="label">يوم السداد (1 إلى 31)</label><input id="dDate" class="field" type="number" min="1" max="31"></div>
-    <div class="text-[10px] text-amber-400 font-bold">🔔 تنبيه تلقائي قبل الموعد بـ 3 أيام.</div>
-  </div>
-  <div class="flex gap-2 mt-3"><button id="sd" class="btn btn-primary text-xs">حفظ</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
-
-  document.getElementById("sd").onclick=async()=>{
-    const x={name:val("dn"),type:val("dt"),amount:num("da"),monthlyPayment:num("dm"),dueDate:val("dDate"),createdAt:Date.now()};
-    if(!x.name||x.amount<=0)return toast("أكمل البيانات",true);
-    if(x.type==="سلفة"){x.loanDirection=val("loanDir");x.loanSource=val("loanSource");}
-    const r=push(ref(db,"debts"));await set(r,{...x,id:r.key});closeModal();toast("تم حفظ الالتزام");render();
-  };
-}
-
-function debtPay(id){const d=state.data.debts[id];if(d)payDebtForm(d,false)}
-function interestPay(id){const d=state.data.debts[id];if(d)payDebtForm(d,true)}
-function payDebtForm(d,interest){
-  const max=interest?Number(d.monthlyPayment)||0:Number(d.amount)||0;
-  openModal(`<h3 class="text-base font-black mb-2.5 text-white">${interest?"سداد فائدة الشهر":"سداد الدين"} — ${esc(d.name)}</h3><p class="text-xs">المتاح: <b class="text-white">${money(max)}</b></p><input id="debtPayAmount" class="field mt-2" type="number" value="${max}"><select id="debtPayMethod" class="field mt-2"><option>كاش</option><option>انستاباي</option><option>محفظة إلكترونية</option><option>تحويل بنكي</option></select><div class="flex gap-2 mt-3"><button id="doDebtPay" class="btn btn-green text-xs">تأكيد</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
-  document.getElementById("doDebtPay").onclick=async()=>{
-    const p=num("debtPayAmount");if(p<=0||p>max)return toast("المبلغ غير صحيح",true);
-    if(!interest)await update(ref(db,"debts/"+d.id),{amount:Math.max(0,(Number(d.amount)||0)-p)});
-    await treasuryRecord(-p,(interest?"سداد فائدة: ":"سداد دين: ")+d.name,"سداد دين");
-    closeModal();toast("تم السداد وتسجيله في الخزنة");render();
-  };
-}
-
-function debtAdvance(id){
-  const d=state.data.debts[id];if(!d)return;
-  openModal(`<h3 class="text-base font-black mb-2.5 text-white">＋ سلفة — ${esc(d.name)}</h3><div class="grid gap-2"><input id="debtAdvAmount" class="field" type="number" placeholder="قيمة السلفة"><select id="debtAdvDir" class="field"><option value="له">له</option><option value="عليه">عليه</option></select><select id="debtAdvSource" class="field"><option value="رأس المال">من رأس المال</option><option value="الفائدة الشهرية">من الفائدة الشهرية</option></select><select id="debtAdvMode" class="field"><option value="كلي">سداد كلي</option><option value="جزئي">سداد جزئي</option></select><input id="debtAdvMonthly" class="field" type="number" placeholder="السداد الشهري"></div><div class="flex gap-2 mt-3"><button id="saveDebtAdv" class="btn btn-primary text-xs">حفظ</button><button class="btn btn-gray text-xs" onclick="closeModal()">إلغاء</button></div>`);
-  document.getElementById("saveDebtAdv").onclick=async()=>{
-    const amount=num("debtAdvAmount"),mode=val("debtAdvMode"),monthly=num("debtAdvMonthly");
-    if(amount<=0)return toast("أدخل مبلغ السلفة",true);
-    if(mode==="جزئي"&&monthly<=0)return toast("أدخل السداد الشهري",true);
-    const r=push(ref(db,"advances"));
-    await set(r,{id:r.key,partyType:"debt",partyId:id,amount,paid:0,mode,monthlyPayment:mode==="جزئي"?monthly:amount,loanDirection:val("debtAdvDir"),loanSource:val("debtAdvSource"),createdAt:Date.now()});
-    const sign=val("debtAdvDir")==="له"?-1:1;
-    await treasuryRecord(sign*amount,`سلفة ${val("debtAdvDir")} للدين ${d.name}`,"سلفة دين");
-    closeModal();toast("تم تسجيل السلفة");render();
-  };
-}
-
-function debtDetails(id){
-  const d=state.data.debts[id];if(!d)return;
-  openModal(`<h3 class="text-base font-black text-white">${esc(d.name)}</h3><p class="mt-2 text-xs">المتبقي: <b class="text-white">${money(d.amount)}</b></p><p class="text-xs">القسط/الفائدة: <b class="text-white">${money(d.monthlyPayment||0)}</b></p><p class="text-xs mt-1">يوم السداد: <b class="text-white">${d.dueDate?d.dueDate+" من كل شهر":"غير محدد"}</b></p><button class="btn btn-gray text-xs mt-3" onclick="closeModal()">إغلاق</button>`);
-}
-
-function archive(){const arr=vals(state.data.archives);return layout("الأرشيف","البيانات المؤرشفة")+`<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-2">${arr.map(a=>`<div class="card p-2.5 text-xs"><b class="text-white">${esc(a.shiftNo||"")}</b><div class="small">${esc(a.driverName||"")}</div><div>الإيراد: <b class="text-white">${money(a.revenue)}</b></div></div>`).join("")||"<p class='small'>لا توجد سجلات.</p>"}</div>`}
-
-function render(){
-  const v=document.getElementById("view");
-  if(state.view==="dashboard")v.innerHTML=dashboard();
-  else if(state.view==="availableTrips")v.innerHTML=availableTrips();
-  else if(state.view==="drivers")v.innerHTML=drivers();
-  else if(state.view==="cars")v.innerHTML=cars();
-  else if(state.view==="customers")v.innerHTML=customers();
-  else if(state.view==="shifts")v.innerHTML=shifts();
-  else if(state.view==="treasury")v.innerHTML=treasury();
-  else if(state.view==="debts")v.innerHTML=debtsView();
-  else if(state.view==="archive")v.innerHTML=archive();
-  bindView();
-}
-
-function bindView(){
-  document.querySelectorAll("[data-action]").forEach(b=>b.onclick=()=>actions(b.dataset.action,b.dataset.id));
-  const sv=document.getElementById("saveVaultInit");
-  if(sv)sv.onclick=async()=>{await update(ref(db,"settings"),{vaultInitBalance:num("vaultInitInput")});toast("تم حفظ الرصيد");render()};
-}
-
-async function actions(a,id){
-  if(a==="newDriver")return driverForm();
-  if(a==="editDriver")return driverForm(id);
-  if(a==="driverPay")return driverPay(id);
-  if(a==="driverAdvance")return driverAdvance(id);
-  if(a==="driverDetails")return details("driver",id);
-  if(a==="newCar")return carForm();
-  if(a==="editCar")return carForm(id);
-  if(a==="carRentPay")return carRentPay(id);
-  if(a==="carAdvance")return carAdvance(id);
-  if(a==="carDetails")return details("car",id);
-  if(a==="newCustomer")return customerForm();
-  if(a==="customerDetails")return customerDetails(id);
-  if(a==="newShift")return shiftForm();
-  if(a==="shiftDetails")return shiftDetails(id);
-  if(a==="closeShift")return closeShift(id);
-  if(a==="addTrip")return tripForm(id);
-  if(a==="addExpense")return expenseForm(id);
-  if(a==="newAvailableTrip")return availableTripForm();
-  if(a==="editAvailableTrip")return availableTripForm(id);
-  if(a==="deleteAvailableTrip")return deleteAvailableTrip(id);
-  if(a==="treasuryIn")return treasuryForm("دخل");
-  if(a==="treasuryOut")return treasuryForm("خرج");
-  if(a==="newDebt")return debtForm();
-  if(a==="debtPay")return debtPay(id);
-  if(a==="interestPay")return interestPay(id);
-  if(a==="debtAdvance")return debtAdvance(id);
-  if(a==="debtDetails")return debtDetails(id);
-  if(a==="deleteDebt"){if(confirm("حذف الالتزام؟")){await remove(ref(db,"debts/"+id));toast("تم الحذف");render()}}
-}
-</script>
-</body>
-    </html>
+    <h4 class="font-bold text-amber-400 
